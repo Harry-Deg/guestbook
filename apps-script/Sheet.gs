@@ -861,3 +861,192 @@ function onOpen() {
     .addItem('Purger les données (après l\'événement)', 'purgerDonneesPostEvenement')
     .addToUi();
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Accès métier : foyers et réponses
+   (utilisé par Code.gs — ajouté en Phase 2)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Retrouve le foyer auquel appartient une adresse.
+ * La colonne `emails` peut contenir plusieurs adresses séparées par `;` (D08).
+ * Retourne le foyer_id, ou null si l'adresse est inconnue.
+ */
+function trouverFoyerParEmail_(email) {
+  var cherche = normaliserEmail_(email);
+  if (!cherche) return null;
+
+  var t = lireOnglet_('Foyers');
+  verifierEntetes_('Foyers', t.index);
+
+  for (var i = 0; i < t.objets.length; i++) {
+    if (emailsDuFoyer_(t.objets[i].emails).indexOf(cherche) >= 0) {
+      return String(t.objets[i].foyer_id || '').trim() || null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Charge tout ce qu'il faut pour afficher le formulaire d'un foyer.
+ * Ne retourne JAMAIS les adresses email ni les notes des mariés.
+ */
+function chargerFoyer_(foyerId) {
+  var tf = lireOnglet_('Foyers');
+  verifierEntetes_('Foyers', tf.index);
+
+  var ligne = null;
+  tf.objets.forEach(function (f) {
+    if (String(f.foyer_id || '').trim() === foyerId) ligne = f;
+  });
+  if (!ligne) throw erreurApi_('SESSION_EXPIREE'); // foyer supprimé pendant la session
+
+  var ti = lireOnglet_('Invites');
+  verifierEntetes_('Invites', ti.index);
+
+  var personnes = ti.objets
+    .filter(function (p) { return String(p.foyer_id || '').trim() === foyerId; })
+    .map(function (p) {
+      return {
+        nom: String(p.personne || '').trim(),
+        type: String(p.type_personne || 'adulte').trim().toLowerCase()
+      };
+    })
+    .filter(function (p) { return p.nom !== ''; });
+
+  var estOui = function (v) { return String(v || '').trim().toLowerCase() === 'oui'; };
+
+  return {
+    foyerId: foyerId,
+    nom: String(ligne.nom_affichage || '').trim(),
+    placesMax: Number(ligne.places_max) || personnes.length,
+    personnes: personnes,
+    invitations: {
+      vinHonneur: estOui(ligne.invite_vin_honneur),
+      diner: estOui(ligne.invite_diner),
+      brunch: estOui(ligne.invite_brunch)
+    }
+  };
+}
+
+/** Réponses déjà enregistrées pour un foyer, pour pré-remplir le formulaire. */
+function lireReponsesFoyer_(foyerId) {
+  var t = lireOnglet_('Reponses');
+  verifierEntetes_('Reponses', t.index);
+
+  var lignes = t.objets.filter(function (r) {
+    return String(r.foyer_id || '').trim() === foyerId;
+  });
+
+  return {
+    commentaire: lignes.length ? String(lignes[0].commentaire || '') : '',
+    majLe: lignes.length ? String(lignes[0].maj_le || '') : '',
+    personnes: lignes.map(function (r) {
+      return {
+        personne: String(r.personne || '').trim(),
+        type: String(r.type_personne || 'adulte').trim().toLowerCase(),
+        estAccompagnant: String(r.est_accompagnant || 'non').trim().toLowerCase() === 'oui',
+        presence: String(r.presence || '').trim().toLowerCase() === 'oui',
+        age: r.age === '' || r.age === null || r.age === undefined ? null : Number(r.age),
+        regime: String(r.regime || '').trim().toLowerCase(),
+        allergies: String(r.allergies || '')
+      };
+    })
+  };
+}
+
+/**
+ * Remplace toutes les lignes d'un foyer dans Reponses et archive la version dans Historique.
+ *
+ * Idempotente et protégée par LockService (C10) : deux soumissions simultanées du même
+ * foyer, ou la même soumission envoyée deux fois, ne produisent jamais de doublon.
+ *
+ * `personnes` est une liste déjà validée et assainie par Code.gs.
+ */
+function ecrireReponsesFoyer_(foyerId, personnes, commentaire) {
+  var verrou = LockService.getScriptLock();
+  if (!verrou.tryLock(20000)) {
+    journaliser_('', 'submitRsvp', 'SERVICE_INDISPONIBLE', 'verrou indisponible');
+    throw erreurApi_('SERVICE_INDISPONIBLE');
+  }
+
+  try {
+    var t = lireOnglet_('Reponses');
+    verifierEntetes_('Reponses', t.index);
+
+    var horodatage = maintenantIso_();
+    var soumissionId = Utilities.getUuid();
+
+    // Les lignes sont construites d'après les en-têtes RÉELS de la feuille :
+    // si les mariés ont déplacé une colonne, l'écriture reste correcte.
+    var valeurParChamp = function (p) {
+      return {
+        foyer_id: foyerId,
+        personne: p.personne,
+        type_personne: p.type,
+        est_accompagnant: p.estAccompagnant ? 'oui' : 'non',
+        presence: p.presence ? 'oui' : 'non',
+        age: p.age === null || p.age === undefined ? '' : p.age,
+        regime: p.regime || '',
+        allergies: p.allergies || '',
+        commentaire: commentaire || '',
+        maj_le: horodatage
+      };
+    };
+
+    var nouvelles = personnes.map(function (p) {
+      var champs = valeurParChamp(p);
+      return t.entetes.map(function (e) { return e in champs ? champs[e] : ''; });
+    });
+
+    var conservees = t.lignes.filter(function (l) {
+      return String(l[t.index.foyer_id] || '').trim() !== foyerId;
+    });
+
+    var toutes = conservees.concat(nouvelles);
+    var nbColonnes = t.entetes.length;
+    var ancienNb = t.lignes.length;
+
+    if (ancienNb > 0) {
+      t.feuille.getRange(2, 1, ancienNb, nbColonnes).clearContent();
+    }
+    if (toutes.length > 0) {
+      t.feuille.getRange(2, 1, toutes.length, nbColonnes).setValues(toutes);
+    }
+
+    archiverDansHistorique_(soumissionId, horodatage, foyerId, personnes, commentaire);
+
+    return { horodatage: horodatage, soumissionId: soumissionId, lignes: nouvelles.length };
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
+/** Ajoute une version complète dans Historique, en une seule écriture. */
+function archiverDansHistorique_(soumissionId, horodatage, foyerId, personnes, commentaire) {
+  var t = lireOnglet_('Historique');
+  verifierEntetes_('Historique', t.index);
+
+  var lignes = personnes.map(function (p) {
+    var champs = {
+      horodatage: horodatage,
+      soumission_id: soumissionId,
+      foyer_id: foyerId,
+      personne: p.personne,
+      type_personne: p.type,
+      est_accompagnant: p.estAccompagnant ? 'oui' : 'non',
+      presence: p.presence ? 'oui' : 'non',
+      age: p.age === null || p.age === undefined ? '' : p.age,
+      regime: p.regime || '',
+      allergies: p.allergies || '',
+      commentaire: commentaire || '',
+      maj_le: horodatage
+    };
+    return t.entetes.map(function (e) { return e in champs ? champs[e] : ''; });
+  });
+
+  if (!lignes.length) return;
+  t.feuille.getRange(t.feuille.getLastRow() + 1, 1, lignes.length, t.entetes.length)
+           .setValues(lignes);
+}

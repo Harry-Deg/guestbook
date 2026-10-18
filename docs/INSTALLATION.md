@@ -123,10 +123,136 @@ d'invités**.
 
 ---
 
-## Phase 2 — Déploiement du backend
+## Phase 2 — Déployer le backend
 
-*(À venir. Autorisation d'envoi de mails, Script Properties `EMAIL_TEST`, premier déploiement
-en Application Web, test `curl`. Aucun déploiement ne sera fait sans votre accord explicite.)*
+Durée : environ 20 minutes. **Rien dans cette phase n'est lancé sans votre accord** :
+c'est vous qui cliquez sur Déployer.
+
+### 2.1 Copier les fichiers de script — 🖐
+
+Dans l'éditeur Apps Script, créer un fichier par source et y coller le contenu du dépôt.
+Le nom doit être **exactement** celui-ci (Apps Script ajoute `.gs` tout seul) :
+
+| Fichier de l'éditeur | Source dans le dépôt |
+|---|---|
+| `Code` | [`apps-script/Code.gs`](../apps-script/Code.gs) — **remplace** le `Code.gs` d'origine et son `myFunction()` |
+| `Sheet` | [`apps-script/Sheet.gs`](../apps-script/Sheet.gs) — déjà en place depuis la Phase 1, à remettre à jour |
+| `Securite` | [`apps-script/Securite.gs`](../apps-script/Securite.gs) |
+| `Mail` | [`apps-script/Mail.gs`](../apps-script/Mail.gs) |
+| `Tests` | [`apps-script/Tests.gs`](../apps-script/Tests.gs) |
+
+Puis le manifeste :
+
+1. Roue dentée **Paramètres du projet** → cocher
+   **« Afficher le fichier manifeste appsscript.json dans l'éditeur »**.
+2. Revenir à l'éditeur : `appsscript.json` apparaît dans la liste.
+3. Remplacer son contenu par celui de [`apps-script/appsscript.json`](../apps-script/appsscript.json).
+
+> Ce manifeste déclare le fuseau horaire, le mode d'exécution de l'application web et les
+> deux autorisations demandées : lecture/écriture de classeurs, et envoi de mail.
+
+### 2.2 Déclarer l'adresse de test — 🖐
+
+**Paramètres du projet** → **Propriétés du script** → **Ajouter une propriété** :
+
+| Propriété | Valeur |
+|---|---|
+| `EMAIL_TEST` | votre adresse, **qui doit aussi figurer dans l'onglet `Foyers`** |
+
+C'est le seul endroit où une vraie adresse est écrite. Elle n'entre jamais dans le dépôt (C1, D05).
+
+### 2.3 Tester avant de déployer — 🖐
+
+Avant d'exposer quoi que ce soit sur Internet, lancer depuis l'éditeur :
+
+1. **`testerFonctionsPures`** → `Exécuter`. Attendu : `0 échec(s)`.
+   Aucun mail n'est envoyé, rien n'est écrit.
+2. **`apercuMailCode`** → relire le texte du mail dans le journal. C'est le moment de
+   demander une correction de formulation.
+3. **`testerParcoursComplet`** → Google demande une **nouvelle autorisation**, cette fois
+   pour l'envoi de mail : `Examiner les autorisations` → `Paramètres avancés` →
+   `Accéder à … (non sécurisé)` → `Autoriser`.
+   Attendu : `0 échec(s)`, **et un mail reçu** à l'adresse `EMAIL_TEST`.
+
+   > Ce test écrit dans `Reponses` pour votre foyer de test. C'est voulu.
+
+4. **`testerIsolationFoyer`** → attendu : `0 échec(s)`. Vérifie qu'un foyer ne peut pas
+   toucher les données d'un autre. Nécessite au moins **deux** foyers dans le Sheet.
+5. **`testerAntiAbus`** → attendu : `0 échec(s)`.
+   ⚠️ Ce test envoie jusqu'à 5 mails et **bloque votre adresse de test pendant une heure**.
+   Pour enchaîner d'autres tests ensuite, lancer `reinitialiserCompteurDeTest`.
+
+Si un test échoue, **ne pas déployer** : envoyez-moi le rapport.
+
+### 2.4 Premier déploiement — 🖐 **votre décision**
+
+1. En haut à droite : **`Déployer`** → **`Nouveau déploiement`**.
+2. Roue dentée à côté de *Sélectionner le type* → **`Application Web`**.
+3. Remplir :
+
+   | Champ | Valeur |
+   |---|---|
+   | Description | `v0.2.0 — backend` |
+   | Exécuter en tant que | **Moi** (votre adresse) |
+   | Qui a accès | **Tout le monde** |
+
+   > « Tout le monde » est **obligatoire** : les invités n'ont pas de compte Google.
+   > Le script s'exécute avec vos droits, mais il ne fait que ce que son code autorise —
+   > c'est pour cela que tout passe par un code de connexion.
+
+4. **`Déployer`**, puis **copier l'URL de l'application Web** : elle se termine par `/exec`.
+   Conservez-la, elle ira dans `assets/js/config.js` en Phase 3.
+
+### 2.5 Vérifier depuis l'extérieur — 🖐
+
+Dans un terminal, en remplaçant `URL` par votre URL `/exec` :
+
+```bash
+URL="https://script.google.com/macros/s/.../exec"
+curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
+```
+
+Attendu, sur une seule ligne :
+
+```json
+{"version":"0.2.0","dateLimite":"2027-04-30","reponsesOuvertes":true,"ok":true}
+```
+
+> Le `-L` est **indispensable** : Apps Script répond par une redirection 302 vers
+> `googleusercontent.com` (C4). Sans `-L`, `curl` n'affiche rien. Le navigateur, lui,
+> suit la redirection tout seul.
+
+Autres vérifications utiles :
+
+```bash
+# action inconnue : doit répondre une erreur propre, en HTTP 200
+curl -sL -H "Content-Type: text/plain" -d '{"action":"nimportequoi"}' "$URL"
+# attendu : {"ok":false,"error":"DONNEES_INVALIDES"}
+
+# adresse inconnue : ne doit envoyer aucun mail
+curl -sL -H "Content-Type: text/plain" \
+  -d '{"action":"requestCode","email":"inconnu@example.com","website":""}' "$URL"
+# attendu : {"ok":false,"error":"EMAIL_INCONNU"}
+```
+
+### 2.6 À retenir pour la suite
+
+> **Après chaque modification du code**, il faut refaire
+> `Déployer` → **`Gérer les déploiements`** → crayon ✏️ → *Version* : **`Nouvelle version`** → `Déployer`.
+>
+> « **Gérer les déploiements** » conserve l'URL. « **Nouveau déploiement** » en créerait une
+> autre, et le site continuerait d'appeler l'ancienne (C12, R09).
+>
+> Pour vérifier qu'une mise à jour est bien en ligne : rappeler `ping` et regarder `version`.
+
+### 2.7 Vérifications attendues avant la Phase 3
+
+- [ ] Les 5 fichiers et le manifeste sont dans l'éditeur, sans erreur de syntaxe.
+- [ ] `EMAIL_TEST` est défini et l'adresse figure dans `Foyers`.
+- [ ] Les cinq fonctions de test passent avec `0 échec(s)`.
+- [ ] Un mail de code a été reçu, lu sur mobile, et **n'est pas en spam**.
+- [ ] `ping` répond correctement en `curl` depuis l'extérieur.
+- [ ] L'URL `/exec` est notée **en dehors du dépôt**.
 
 ---
 

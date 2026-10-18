@@ -109,3 +109,46 @@ n'auront pas écrit le code relu.
 le code de sécurité et sur la revue finale ; sur P1, les contrôles ont été validés par **exécution**
 (banc d'essai hors ligne, jeu de données corrompu) plutôt que par lecture, ce qui est plus probant.
 **À confirmer par Harry** : oui.
+
+## 2026-10-18 — D14 · Adresse auteur git laissée telle quelle
+**Décision** : les commits restent signés avec l'adresse Gmail personnelle de Harry ; pas de réécriture
+d'historique, pas d'override `user.email` local.
+**Pourquoi** : Harry a arbitré après exposition du risque. L'adresse deviendra publique avec le dépôt.
+**Risque accepté** : collecte automatisée de l'adresse sur GitHub (spam, hameçonnage). Aucun lien avec
+les données des invités, et aucun effet sur le quota d'envoi `MailApp` (recevoir ne consomme rien).
+**Validé par** : Harry, 2026-10-18.
+
+## 2026-10-18 — D15 · Portée OAuth `spreadsheets` plutôt que `spreadsheets.currentonly`
+**Décision** : `appsscript.json` déclare `https://www.googleapis.com/auth/spreadsheets`.
+**Pourquoi** : la portée minimale `spreadsheets.currentonly` est la plus propre, mais son comportement
+dans une Application Web accédée **anonymement** depuis un script lié est connu pour être instable.
+Mettre ce piège sur le chemin critique de Harry coûterait plus cher que la portée élargie, sur un script
+qui lui appartient et qui ne lit qu'un seul classeur.
+**Réversible** : oui, en changeant une ligne puis en réautorisant.
+
+## 2026-10-18 — D16 · `ping` renvoie aussi la date limite
+**Décision** : extension du contrat §5 — `ping` renvoie `{ version, dateLimite, reponsesOuvertes }`
+au lieu de `{ version }` seul.
+**Pourquoi** : le front doit pouvoir afficher « les réponses sont closes » **avant** toute connexion.
+L'alternative serait de recopier `DATE_LIMITE` en dur dans `index.html`, qui dériverait de `Config`.
+L'information est publique et ne révèle rien.
+
+## 2026-10-18 — D17 · Infos publiques des mariés portées par la page, pas par l'API
+**Décision** : nom des mariés, date du mariage, lieux, programme et adresse de contact sont écrits dans
+`index.html`. L'API ne les renvoie pas (hors `dateLimite`).
+**Pourquoi** : ce sont des informations publiques et statiques ; les faire transiter par l'API ajouterait
+un aller-retour de 1 à 4 s (C5) avant le premier affichage, pour une donnée qui ne change jamais.
+`Config` reste la source pour ce que le **script** utilise (mails, date limite).
+**Conséquence** : à la mise en ligne, vérifier que `index.html` et `Config` disent la même chose.
+
+## 2026-10-18 — D18 · Codes et tokens stockés hachés
+**Décision** : `CacheService` ne contient jamais un code ni un token en clair, mais leur empreinte
+SHA-256 salée (sel propre à l'installation, généré une fois dans `PropertiesService`).
+**Pourquoi** : coût nul, et une inspection du cache ne permet plus de rejouer une session ni de
+lire un code en vol. Complète l'interdiction de journaliser ces valeurs.
+
+## 2026-10-18 — D19 · Code à 6 chiffres dérivé de `Utilities.getUuid()`
+**Décision** : le code n'est pas tiré de `Math.random()` mais des 8 premiers octets hexadécimaux d'un
+UUID v4, ramenés modulo 10^6.
+**Pourquoi** : `Math.random()` (xorshift128+) est prédictible si l'on observe assez de tirages.
+`getUuid()` s'appuie sur un générateur adapté. Le surcoût est nul.

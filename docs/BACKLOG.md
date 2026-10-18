@@ -9,12 +9,12 @@ Statuts : `à faire` · `en cours` · `fait` · `reporté v2` · `abandonné`
 | M1 | Structure du dépôt, conventions, documents de pilotage | P0 | fait |
 | M2 | Modèle de données + CSV modèles + `initialiserSheet()` | P1 | fait (à exécuter par Harry) |
 | M3 | `verifierDonnees()` (contrôles qualité du Sheet) | P1 | fait (testé hors ligne) |
-| M4 | Routage Apps Script (`doPost`, action `ping`) | P2 | à faire |
-| M5 | `requestCode` : code 6 chiffres, TTL 10 min, honeypot, anti-abus | P2 | à faire |
-| M6 | Envoi du mail de code (gabarit sobre, quota vérifié) | P2 | à faire |
-| M7 | `verifyCode` : 5 essais max, usage unique, création du token | P2 | à faire |
-| M8 | `getRsvp` / `submitRsvp` / `logout` | P2 | à faire |
-| M9 | Écriture idempotente sous verrou + `Historique` | P2 | à faire |
+| M4 | Routage Apps Script (`doPost`, action `ping`) | P2 | fait |
+| M5 | `requestCode` : code 6 chiffres, TTL 10 min, honeypot, anti-abus | P2 | fait |
+| M6 | Envoi du mail de code (gabarit sobre, quota vérifié) | P2 | fait (délivrabilité à tester) |
+| M7 | `verifyCode` : 5 essais max, usage unique, création du token | P2 | fait |
+| M8 | `getRsvp` / `submitRsvp` / `logout` | P2 | fait |
+| M9 | Écriture idempotente sous verrou + `Historique` | P2 | fait (concurrence réelle à tester) |
 | M10 | Page d'informations pratiques (date, lieux, programme, accès) | P3 | à faire |
 | M11 | Écrans : email → code → formulaire → merci | P3 | à faire |
 | M12 | États chargement / erreur / succès / session expirée / clos | P3 | à faire |
