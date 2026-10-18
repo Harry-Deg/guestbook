@@ -120,13 +120,13 @@ Après le premier déploiement.
 > L'outil a d'abord été validé contre un faux Apps Script local reproduisant la
 > redirection 302, pour s'assurer qu'il ne pouvait pas donner un faux « tout va bien ».
 
-### 3.2 Fonctions de test
+### 3.2 Fonctions de test — ✅ **fait le 2026-10-19**
 
-- [ ] `testerFonctionsPures()` : 0 échec.
-- [ ] `apercuMailCode()` : le texte est relu et validé.
-- [ ] `testerParcoursComplet()` : 0 échec, un mail reçu.
-- [ ] `testerIsolationFoyer()` : 0 échec.
-- [ ] `testerAntiAbus()` : 0 échec.
+- [x] `testerFonctionsPures()` : 0 échec.
+- [x] `apercuMailCode()` : le texte est relu et validé.
+- [x] `testerParcoursComplet()` : 0 échec, un mail reçu.
+- [x] `testerIsolationFoyer()` : 0 échec.
+- [x] `testerAntiAbus()` : 0 échec.
 
 ### 3.3 Mail réel (C15, R01)
 
@@ -145,6 +145,69 @@ Après le premier déploiement.
 
 - [ ] Abaisser temporairement `PLAFOND_MAILS_JOUR` à `1`, demander deux codes : le second renvoie `SERVICE_INDISPONIBLE` et `Journal` contient l'alerte. **Remettre la valeur à 80 ensuite.**
 - [ ] Après une centaine de demandes de test cumulées, vérifier que `PropertiesService` ne dépasse pas sa limite (Paramètres du projet → Propriétés du script).
+
+---
+
+## 3bis. Session de test en local — 🖐
+
+Le site complet, contre le vrai backend, avant toute mise en ligne.
+
+```bash
+cd ~/Documents/guestbook
+python3 -m http.server 8000
+```
+
+puis <http://localhost:8000>. **Pas en `file://`** : les modules ES seraient bloqués par
+le navigateur.
+
+> Vérifié le 2026-10-19 : les dix ressources de la page répondent en 200 avec le bon type
+> MIME, `app.js` compris — un mauvais type MIME ferait silencieusement échouer le module.
+
+### Dans l'ordre, sur ordinateur d'abord
+
+1. **Console ouverte** (`F12` → onglet Console) **avant** de charger la page.
+   Attendu : **aucune ligne rouge**, et surtout aucun message contenant
+   « Content Security Policy ». Une violation CSP ne casse pas forcément l'affichage,
+   mais elle casserait les appels réseau.
+2. La page s'affiche, la photo d'accueil se charge.
+3. Au bout de 1 à 4 s, la ligne « Merci de nous répondre avant le… » apparaît sous
+   le premier texte : c'est `ping` qui a répondu et qui a lu `Config`.
+4. **Répondre à l'invitation** → saisir **votre adresse de test** → *Recevoir mon code*.
+   Le bouton se verrouille et affiche « Envoi en cours… ».
+5. Relever le code dans le mail, le **coller** dans le champ (le collage doit fonctionner).
+6. Le formulaire s'affiche avec les personnes de votre foyer de test.
+7. Cocher, remplir, envoyer. Le récapitulatif s'affiche.
+8. **Recharger la page** (`F5`) : le bouton d'accueil doit dire « Reprendre ma réponse »,
+   et y cliquer doit ramener au récapitulatif sans redemander de code.
+9. **Modifier ma réponse** → le formulaire revient **pré-rempli**. Changer une valeur,
+   renvoyer, vérifier dans le Sheet qu'il n'y a **pas de doublon** dans `Reponses` et
+   **une version de plus** dans `Historique`.
+10. **Se déconnecter** → recharger → le bouton redit « Répondre à l'invitation ».
+
+### Erreurs à provoquer volontairement
+
+- [ ] Adresse inconnue → message explicite, et **aucun mail reçu**.
+- [ ] Code faux → « Code incorrect », on reste sur l'écran.
+- [ ] Attendre 11 minutes puis valider le code → « Ce code a expiré ».
+- [ ] Mode avion, puis envoyer → « Petit souci technique », bouton réactivé.
+
+### Puis sur téléphone
+
+Depuis le même réseau Wi-Fi, l'adresse est `http://<IP-de-votre-Mac>:8000`
+(`ipconfig getifaddr en0` pour la connaître).
+
+- [ ] Tout le parcours au pouce, **sans jamais zoomer**.
+- [ ] Aucun défilement horizontal, à aucun écran.
+- [ ] Le clavier numérique s'ouvre sur le champ du code.
+- [ ] Le code reçu par SMS/mail est proposé en remplissage automatique au-dessus du clavier.
+- [ ] iPhone Safari **et** Android Chrome si possible.
+
+### Navigation clavier, sur ordinateur
+
+- [ ] `Tab` seul, sans souris, du début à la fin du parcours.
+- [ ] Le focus est **toujours visible** (contour marine).
+- [ ] `Espace` coche les boutons « Présent·e / Absent·e ».
+- [ ] Après chaque changement d'écran, le focus est sur le titre du nouvel écran.
 
 ---
 
