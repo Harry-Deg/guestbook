@@ -332,7 +332,7 @@ Une seule commande, depuis la racine du dépôt :
 Les guillemets sont nécessaires : l'URL contient des caractères que le terminal
 interpréterait autrement.
 
-Onze contrôles s'enchaînent :
+Douze contrôles s'enchaînent :
 
 | Ce qui est vérifié | Pourquoi ça compte |
 |---|---|
@@ -351,7 +351,7 @@ domaine réservé qui ne correspond à aucun de vos foyers.
 Sortie attendue :
 
 ```
-11 contrôles · 11 OK · 0 échec(s)
+12 contrôles · 12 OK · 0 échec(s)
 Le déploiement est prêt. Reportez l'URL dans assets/js/config.js.
 ```
 
@@ -398,7 +398,7 @@ curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
 - [ ] Les cinq fonctions de test passent avec `0 échec(s)`.
 - [ ] Un mail de code a été reçu, lu sur mobile, et **n'est pas en spam**.
 - [ ] `ping` répond correctement en `curl` depuis l'extérieur.
-- [ ] `./outils/verifier-deploiement.sh "<URL>"` : 11 contrôles, 0 échec.
+- [ ] `./outils/verifier-deploiement.sh "<URL>"` : 12 contrôles, 0 échec.
 - [ ] L'URL `/exec` est notée **en dehors du dépôt**, et reportée dans
       [`assets/js/config.js`](../assets/js/config.js).
 

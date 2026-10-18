@@ -11,7 +11,7 @@
 export const API_URL = 'https://script.google.com/macros/s/AKfycbyEfYfN-_qX0SOaPMgq8FTBWF9n2INMzWaTuGEQ8d67HpUc7uOox2m5vGoHwgeDPNnAUQ/exec';
 
 /** Adresse affichée dans les messages d'erreur (« écrivez-nous »). */
-export const CONTACT_MARIES = 'maries@example.com';
+export const CONTACT_MARIES = 'harryoscard@gmail.com';
 
 /**
  * Délai au-delà duquel on considère que l'appel a échoué.

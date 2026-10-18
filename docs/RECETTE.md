@@ -107,11 +107,18 @@ le serveur, et ce que le serveur renvoie est réellement affiché. C'est un test
 
 Après le premier déploiement.
 
-### 3.1 Déploiement
+### 3.1 Déploiement — ✅ **fait le 2026-10-19**
 
-- [ ] `curl -sL -d '{"action":"ping"}' "$URL"` renvoie `{"ok":true,"version":"0.2.0",...}`.
-- [ ] L'URL ouverte dans un navigateur affiche le JSON de `doGet` (vérifie que le déploiement est bien à jour, R09).
-- [ ] Après une modification de code **sans** nouvelle version, `ping` renvoie l'ancienne `version` : confirme qu'un redéploiement est nécessaire (C12).
+- [x] `./outils/verifier-deploiement.sh "<URL>"` : **12 contrôles, 12 OK**, sur le
+      déploiement réel. `version` = `0.2.0`, `dateLimite` = `2027-04-10` lue dans `Config`,
+      `reponsesOuvertes` = `true`.
+- [x] L'URL répond en HTTP 200 **sans compte Google** : le réglage « Tout le monde » est bon.
+- [x] Aucune trace technique ne fuit dans les réponses d'erreur.
+- [ ] Après une modification de code **sans** nouvelle version, `ping` renvoie l'ancienne
+      `version` : à constater une fois, pour avoir le réflexe du redéploiement (C12, R09).
+
+> L'outil a d'abord été validé contre un faux Apps Script local reproduisant la
+> redirection 302, pour s'assurer qu'il ne pouvait pas donner un faux « tout va bien ».
 
 ### 3.2 Fonctions de test
 
