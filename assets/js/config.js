@@ -8,7 +8,7 @@
  */
 
 /** URL /exec de l'Application Web Apps Script. */
-export const API_URL = 'https://script.google.com/macros/s/REMPLACER_PAR_VOTRE_ID/exec';
+export const API_URL = 'https://script.google.com/macros/s/AKfycbyEfYfN-_qX0SOaPMgq8FTBWF9n2INMzWaTuGEQ8d67HpUc7uOox2m5vGoHwgeDPNnAUQ/exec';
 
 /** Adresse affichée dans les messages d'erreur (« écrivez-nous »). */
 export const CONTACT_MARIES = 'maries@example.com';
