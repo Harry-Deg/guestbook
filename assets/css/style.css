@@ -52,6 +52,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Le basculement d'écran et de détails passe par l'attribut `hidden` :
+   on s'assure qu'aucune règle d'affichage ne le contredise. */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 /* Photo de fond, posée une fois pour toute la page et voilée d'ivoire pour
@@ -444,9 +448,6 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* Choix présent / absent : deux grandes cibles, pas une case à cocher. */
 .choix-presence {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .5rem;
   border: 0;
   margin: 0 0 1rem;
   padding: 0;
@@ -454,7 +455,23 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 .choix-presence legend { padding: 0; margin-bottom: .35rem; font-weight: 600; }
 
-.choix-presence__option { position: relative; }
+/* La grille est portée par un div interne : `display: grid` sur un <fieldset>
+   reste mal supporté par les navigateurs un peu anciens. */
+.choix-presence__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+
+/* Chaque option est un <label> : le clic bascule le bouton radio sur toute la
+   surface, et le radio reçoit enfin un nom accessible. */
+.choix-presence__option {
+  position: relative;
+  display: block;
+  margin: 0;
+  font-weight: 400;
+  cursor: pointer;
+}
 
 .choix-presence input {
   position: absolute;

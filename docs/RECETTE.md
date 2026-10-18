@@ -72,6 +72,31 @@ horloge contrôlable pour tester les expirations.
 | └ A7 · `EXPEDITEUR_ADRESSE` sans la portée `gmail.send` | 3 | ✅ |
 | └ B2 / A4 · les sections critiques prennent bien le verrou, sans imbrication | 4 | ✅ |
 
+### 2.3 Front (Phase 3) — **64 contrôles, 64 passés**
+
+Le vrai `app.js` est exécuté sur un DOM minimal, avec `fetch` branché sur le **vrai
+backend** tournant sur le simulateur : ce que le front envoie est réellement traité par
+le serveur, et ce que le serveur renvoie est réellement affiché. C'est un test du
+**contrat front↔back**, pas seulement du front.
+
+| Famille | Contrôles | Résultat |
+|---|---|---|
+| Démarrage, écrans masqués, date limite reprise de `ping` | 3 | ✅ |
+| Parcours complet contre le backend (email → mail réel → code → formulaire) | 21 | ✅ |
+| Validation avant tout appel réseau (présence, âge, accompagnant) | 7 | ✅ |
+| Soumission : forme de la charge utile, acceptation serveur, récapitulatif, modification | 18 | ✅ |
+| `places_max` atteint : pas de bloc accompagnant | 1 | ✅ |
+| XSS : nom hostile venu du Sheet affiché comme du texte | 3 | ✅ |
+| Session : `sessionStorage`, jamais `localStorage`, expiration | 5 | ✅ |
+| Date limite dépassée | 2 | ✅ |
+| Panne réseau : message humain, bouton réactivé, aucune trace technique | 3 | ✅ |
+
+**Deux défauts trouvés par cette suite et corrigés :**
+- `app.js` ne mettait pas à jour son état après un envoi réussi : « Modifier ma réponse »
+  reconstruisait un formulaire **vide** et l'invité perdait sa saisie.
+- La structure générée pour les boutons « présent / absent » ne correspondait pas au
+  sélecteur CSS, et les boutons radio n'avaient **aucun nom accessible**.
+
 > Ces tests s'exécutent sur un **simulateur**, pas sur Google. Ils prouvent la logique,
 > pas le comportement de l'infrastructure. Tout ce qui dépend réellement de Google est
 > repris ci-dessous en §3 et §4.
@@ -157,4 +182,5 @@ Après le premier déploiement.
 | 2026-10-18 | Backend complet (simulateur) | 122 / 122 | agent |
 | 2026-10-18 | Revue sécurité indépendante | 4 bloquants, 7 à corriger — tous corrigés | relecteur |
 | 2026-10-18 | Backend après corrections (simulateur) | 161 / 161 | agent |
+| 2026-10-18 | Front, de bout en bout contre le backend (simulateur) | 64 / 64 | agent |
 | | Phase 2 dans Apps Script | ⏳ | Harry |

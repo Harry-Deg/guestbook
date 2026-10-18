@@ -243,3 +243,31 @@ d'interface, souvent oublié car il ne concerne pas du texte). Corrigée de `#b9
 `#948b7b` (3,4:1).
 **Règle retenue** : ne jamais éclaircir `--couleur-bordure-forte` sans refaire le calcul.
 C'est noté en commentaire dans `style.css`.
+
+## 2026-10-18 — D26 · Vouvoiement
+**Décision** : le site vouvoie, et tous les textes visibles sont regroupés en tête de
+`app.js` (constante `MESSAGES_ERREUR`) et dans `index.html`.
+**Pourquoi** : une liste d'invités de mariage va des grands-parents aux collègues. Le site n'a
+qu'une voix pour tout le monde : le tutoiement sonnerait juste pour les amis proches et
+déplacé pour une grand-tante, alors que le vouvoiement chaleureux ne heurte personne — c'est
+le registre d'un faire-part.
+**Réversible** : oui, en un seul endroit, si les mariés préfèrent tutoyer.
+
+## 2026-10-18 — D27 · CSP restrictive, donc aucun inline nulle part
+**Décision** : `default-src 'none'`, puis uniquement ce qui est nécessaire. Ni `'unsafe-inline'`
+ni `'unsafe-eval'`. Aucun attribut `style=`, aucune balise `<style>`, aucun `<script>` en ligne,
+aucun gestionnaire `onclick=` dans `index.html`.
+**Pourquoi** : sans en-tête HTTP possible sur GitHub Pages (C2), la balise `<meta>` est la seule
+CSP disponible — autant qu'elle serve à quelque chose. `'unsafe-inline'` annulerait l'essentiel
+de la protection XSS.
+**Point à ne pas oublier** : `connect-src` doit lister **les deux** domaines d'Apps Script.
+`script.google.com` reçoit la requête, `script.googleusercontent.com` sert la réponse après la
+redirection 302 (C4). Oublier le second casse tous les appels, sans message clair.
+
+## 2026-10-18 — D28 · Validation en double, côté front et côté serveur
+**Décision** : le front refait les contrôles que le serveur fait déjà (présence choisie, âge de
+l'enfant, nom de l'accompagnant, `places_max`).
+**Pourquoi** : non pour la sécurité — le serveur reste seul juge —, mais pour l'expérience.
+Sans cela, une case oubliée coûte un aller-retour de 1 à 4 s (C5) pour recevoir un
+`DONNEES_INVALIDES` générique qui ne dit pas quoi corriger. Le front, lui, nomme la personne
+concernée et place le focus sur le bon champ.

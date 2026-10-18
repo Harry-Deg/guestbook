@@ -16,11 +16,11 @@ Statuts : `à faire` · `en cours` · `fait` · `reporté v2` · `abandonné`
 | M8 | `getRsvp` / `submitRsvp` / `logout` | P2 | fait |
 | M9 | Écriture idempotente sous verrou + `Historique` | P2 | fait (concurrence réelle à tester) |
 | M20 | Corrections de la revue sécurité indépendante (4 bloquants, 7 points) | P2 | fait |
-| M10 | Page d'informations pratiques (date, lieux, programme, accès) | P3 | maquette faite (textes à remplacer par les vrais) |
-| M11 | Écrans : email → code → formulaire → merci | P3 | maquette faite, câblage à venir |
-| M12 | États chargement / erreur / succès / session expirée / clos | P3 | maquette faite, câblage à venir |
-| M13 | Accessibilité (clavier, contraste AA, `aria-live`, labels) | P3 | à faire |
-| M14 | CSP par balise `<meta>` | P3 | à faire |
+| M10 | Page d'informations pratiques (date, lieux, programme, accès) | P3 | fait (textes réels à saisir par Harry) |
+| M11 | Écrans : email → code → formulaire → merci | P3 | fait |
+| M12 | États chargement / erreur / succès / session expirée / clos | P3 | fait |
+| M13 | Accessibilité (clavier, contraste AA, `aria-live`, labels) | P3 | fait (lecteur d'écran réel à vérifier) |
+| M14 | CSP par balise `<meta>` | P3 | fait (à vérifier dans la console du navigateur) |
 | M15 | Onglet `Synthese` (formules de totaux) + vue traiteur | P1/P4 | fait (totaux à valider sur le vrai Sheet) |
 | M16 | Recette complète consignée dans `RECETTE.md` | P4 | à faire |
 | M17 | Mise en ligne GitHub Pages + test de bout en bout | P5 | à faire |

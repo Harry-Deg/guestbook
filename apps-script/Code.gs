@@ -250,7 +250,10 @@ function etatFoyer_(foyerId) {
   return {
     foyer: {
       nom: foyer.nom,
-      personnes: foyer.personnes,
+      // `cle` est l'index d'appariement interne : inutile au client, donc retiré.
+      personnes: foyer.personnes.map(function (p) {
+        return { nom: p.nom, type: p.type };
+      }),
       placesMax: foyer.placesMax,
       invitations: foyer.invitations
     },
