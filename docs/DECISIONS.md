@@ -43,3 +43,69 @@ Les adresses de test vivent dans les Script Properties (`EMAIL_TEST`) et dans le
 **Validé par** : Harry (brief §4).
 
 <!-- Décisions suivantes : D07… -->
+
+## 2026-10-18 — D07 · Présence unique (pas par événement)
+**Décision** : l'invité déclare **une seule présence** pour le mariage, pas une par événement.
+Les colonnes `invite_vin_honneur` / `invite_diner` / `invite_brunch` de `Foyers` sont **conservées** :
+elles servent à afficher à chaque foyer le programme qui le concerne, et à ventiler les effectifs par
+service dans `Synthese` (présents du foyer × services auxquels le foyer est convié).
+**Pourquoi** : formulaire le plus court possible, l'oncle le moins à l'aise doit réussir du premier coup.
+**Conséquence / limite acceptée** : un invité convié au dîner **et** au brunch ne peut pas venir à l'un
+sans l'autre. Si cela se produit, il l'écrira dans le commentaire et les mariés corrigeront à la main.
+**Validé par** : Harry, 2026-10-18.
+
+## 2026-10-18 — D08 · Plusieurs adresses email par foyer
+**Décision** : colonne `emails` de `Foyers`, une ou plusieurs adresses séparées par `;`. N'importe
+laquelle permet de se connecter et d'accéder à la **même** réponse de foyer.
+**Pourquoi** : les couples ne partagent pas toujours une boîte mail ; éviter qu'un seul conjoint détienne
+l'accès.
+**Conséquences** : unicité à contrôler sur l'ensemble des adresses, toutes confondues (`verifierDonnees()`) ;
+normalisation `trim` + minuscules à la lecture ; les compteurs anti-abus restent **par adresse** (une
+adresse ne peut pas être inondée, mais un foyer à 3 adresses peut recevoir 3 × 5 codes par heure —
+accepté, le plafond mail journalier global reste la vraie protection).
+**Validé par** : Harry, 2026-10-18.
+
+## 2026-10-18 — D09 · « +1 » nommé et optionnel
+**Décision** : si `places_max` est supérieur au nombre de personnes nommées du foyer, le formulaire
+propose d'ajouter un accompagnant. Son **nom est obligatoire** dès que la case est cochée, avec régime
+et allergies comme pour les autres. Ligne marquée `est_accompagnant = oui` dans `Reponses`.
+**Pourquoi** : le plan de table, les étiquettes et le traiteur ont besoin d'un nom ; les mariés gardent le
+contrôle via `places_max`.
+**Validé par** : Harry, 2026-10-18.
+
+## 2026-10-18 — D10 · Enfants distingués, avec âge
+**Décision** : `type_personne` (`adulte` / `enfant`) est renseigné par les mariés dans l'onglet `Invites` ;
+l'**âge** est demandé à l'invité pour les personnes de type `enfant` (entier 0–17, obligatoire si présent).
+**Pourquoi** : menus enfants facturés différemment, chaise haute et menu bébé conditionnés par l'âge.
+**RGPD** : l'âge d'un mineur est une donnée personnelle de plus — justifiée par la finalité traiteur,
+purgée après l'événement comme le reste (R12).
+**Validé par** : Harry, 2026-10-18.
+
+## 2026-10-18 — D11 · Onglet `Invites` séparé (écart assumé avec le §3.4 du brief)
+**Décision** : les personnes nommées d'un foyer vivent dans un onglet `Invites` (une ligne par personne :
+`foyer_id`, `personne`, `type_personne`), au lieu d'une colonne `personnes` de `Foyers` contenant des
+noms séparés par `;`.
+**Pourquoi** : D10 impose une deuxième information par personne (`type_personne`). Deux listes parallèles
+séparées par `;` dans une même ligne se désalignent silencieusement à la première erreur de saisie, et
+interdisent les listes déroulantes. Un tableau se saisit, se trie et se contrôle ; `verifierDonnees()`
+peut valider chaque ligne.
+**Coût** : les mariés remplissent deux onglets cohérents au lieu d'un. `verifierDonnees()` signale les
+foyers sans invité et les invités orphelins.
+**Réversible** : oui, mais avant la saisie réelle de la liste d'invités. **À confirmer par Harry.**
+
+## 2026-10-18 — D12 · `docs/INSTALLATION.md` ajouté à la structure
+**Décision** : un document d'installation pas à pas, distinct de `GUIDE_MARIES.md`, est ajouté à
+`docs/`. Il s'adresse à Harry (consoles Google et GitHub) ; `GUIDE_MARIES.md` s'adressera aux mariés
+(usage du Sheet, sans technique).
+**Pourquoi** : les actions manuelles s'accumulent sur trois phases (Sheet, déploiement, Pages) et la
+gate CP exige qu'elles soient listées étape par étape. Les mélanger au guide des mariés le rendrait
+illisible.
+
+## 2026-10-18 — D13 · Mode de revue des gates
+**Décision** : les revues de rôle de P1 sont faites en annonçant le rôle, par l'agent lui-même. Les
+revues **SEC de P2** et la **revue croisée de P4** seront confiées à des sous-agents indépendants qui
+n'auront pas écrit le code relu.
+**Pourquoi** : le §3 du brief autorise les deux modes. Un relecteur indépendant a le plus de valeur sur
+le code de sécurité et sur la revue finale ; sur P1, les contrôles ont été validés par **exécution**
+(banc d'essai hors ligne, jeu de données corrompu) plutôt que par lecture, ce qui est plus probant.
+**À confirmer par Harry** : oui.

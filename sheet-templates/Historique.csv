@@ -1,0 +1,5 @@
+horodatage,soumission_id,foyer_id,personne,type_personne,est_accompagnant,presence,age,regime,allergies,commentaire,maj_le
+2026-10-18T14:20:11+02:00,6f1b2c3d-0000-4000-8000-000000000001,F001,Marie Durand,adulte,non,oui,,aucun,,,2026-10-18T14:20:11+02:00
+2026-10-18T14:20:11+02:00,6f1b2c3d-0000-4000-8000-000000000001,F001,Paul Durand,adulte,non,non,,,,,2026-10-18T14:20:11+02:00
+2026-10-18T14:32:05+02:00,6f1b2c3d-0000-4000-8000-000000000002,F001,Marie Durand,adulte,non,oui,,vegetarien,,Nous arriverons la veille au soir,2026-10-18T14:32:05+02:00
+2026-10-18T14:32:05+02:00,6f1b2c3d-0000-4000-8000-000000000002,F001,Paul Durand,adulte,non,oui,,aucun,Allergie aux fruits à coque,Nous arriverons la veille au soir,2026-10-18T14:32:05+02:00

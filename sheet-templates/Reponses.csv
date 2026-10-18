@@ -1,0 +1,7 @@
+foyer_id,personne,type_personne,est_accompagnant,presence,age,regime,allergies,commentaire,maj_le
+F001,Marie Durand,adulte,non,oui,,vegetarien,,Nous arriverons la veille au soir,2026-10-18T14:32:05+02:00
+F001,Paul Durand,adulte,non,oui,,aucun,Allergie aux fruits à coque,Nous arriverons la veille au soir,2026-10-18T14:32:05+02:00
+F001,Léa Durand,enfant,non,oui,7,menu_enfant,,Nous arriverons la veille au soir,2026-10-18T14:32:05+02:00
+F001,Tom Durand,enfant,non,non,,,,Nous arriverons la veille au soir,2026-10-18T14:32:05+02:00
+F002,Jeanne Martin,adulte,non,oui,,sans_gluten,Maladie coeliaque,,2026-10-18T15:10:41+02:00
+F002,Hugo Leroy,adulte,oui,oui,,aucun,,,2026-10-18T15:10:41+02:00

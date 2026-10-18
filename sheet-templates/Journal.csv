@@ -1,0 +1,7 @@
+horodatage,email,action,resultat,detail
+2026-10-18T14:18:02+02:00,marie.durand@example.com,requestCode,ok,quota restant 78
+2026-10-18T14:19:40+02:00,marie.durand@example.com,verifyCode,CODE_INVALIDE,essai 1/5
+2026-10-18T14:19:55+02:00,marie.durand@example.com,verifyCode,ok,
+2026-10-18T14:20:11+02:00,,submitRsvp,ok,4 lignes
+2026-10-18T14:21:33+02:00,inconnu@example.com,requestCode,EMAIL_INCONNU,
+2026-10-18T14:22:01+02:00,robot@example.com,requestCode,ok,honeypot - aucun envoi

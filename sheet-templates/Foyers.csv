@@ -1,0 +1,5 @@
+foyer_id,emails,nom_affichage,places_max,invite_vin_honneur,invite_diner,invite_brunch,notes_maries
+F001,marie.durand@example.com;paul.durand@example.com,Marie et Paul Durand,4,oui,oui,oui,Cousins côté mariée - 2 enfants
+F002,jeanne.martin@example.com,Jeanne Martin,2,oui,oui,non,Vient avec un accompagnant - place réservée
+F003,lucie.bernard@example.com,Lucie Bernard,1,oui,non,non,Collègue - vin d'honneur uniquement
+F004,famille.petit@example.com;sophie.petit@example.com,Famille Petit,3,oui,oui,oui,

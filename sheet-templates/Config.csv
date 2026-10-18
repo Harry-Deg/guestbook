@@ -1,0 +1,10 @@
+cle,valeur
+NOM_MARIES,Marie et Paul
+DATE_MARIAGE,2027-06-12
+DATE_LIMITE,2027-04-30
+EXPEDITEUR_NOM,Marie et Paul
+EXPEDITEUR_ADRESSE,
+REPLY_TO,maries@example.com
+CONTACT_MARIES,maries@example.com
+URL_SITE,https://exemple.github.io/mariage/
+PLAFOND_MAILS_JOUR,80
