@@ -178,87 +178,208 @@ Puis le manifeste :
 
 ### 2.2 Déclarer l'adresse de test — 🖐
 
-**Paramètres du projet** → **Propriétés du script** → **Ajouter une propriété** :
+Les fonctions de test ont besoin d'une vraie adresse pour envoyer un vrai mail. Elle n'est
+**jamais écrite dans le code** : elle vit dans une « propriété du script », un petit
+magasin clé/valeur propre au projet Apps Script, invisible depuis le dépôt (C1, D05).
+
+**Où :** éditeur Apps Script → roue dentée ⚙️ **Paramètres du projet** → tout en bas,
+section **Propriétés du script** → **Ajouter une propriété de script**.
 
 | Propriété | Valeur |
 |---|---|
-| `EMAIL_TEST` | votre adresse, **qui doit aussi figurer dans l'onglet `Foyers`** |
+| `EMAIL_TEST` | votre adresse email |
 
-C'est le seul endroit où une vraie adresse est écrite. Elle n'entre jamais dans le dépôt (C1, D05).
+Puis **Enregistrer les propriétés**.
+
+> **La même adresse doit figurer dans la colonne `emails` de l'onglet `Foyers`.**
+> C'est tout l'intérêt : les tests se comportent exactement comme un invité réel. Si
+> l'adresse n'y est pas, `testerParcoursComplet` s'arrête dès le premier contrôle avec
+> « EMAIL_TEST rattachée à un foyer : ÉCHEC ».
+
+Deux autres propriétés apparaîtront toutes seules, ne les touchez pas :
+
+| Propriété | À quoi elle sert |
+|---|---|
+| `SEL_INSTALLATION` | sel de hachage des codes et des tokens. **La supprimer invaliderait toutes les sessions en cours.** |
+| `dem:…`, `mails:…`, `inconnus:…` | compteurs anti-abus. Ils se nettoient seuls. |
 
 ### 2.3 Tester avant de déployer — 🖐
 
-Avant d'exposer quoi que ce soit sur Internet, lancer depuis l'éditeur :
+Rien n'est encore exposé sur Internet : ces tests s'exécutent depuis l'éditeur, sur votre
+classeur. Lancez-les **dans cet ordre**, du plus inoffensif au plus intrusif.
 
-1. **`testerFonctionsPures`** → `Exécuter`. Attendu : `0 échec(s)`.
-   Aucun mail n'est envoyé, rien n'est écrit.
-2. **`apercuMailCode`** → relire le texte du mail dans le journal. C'est le moment de
-   demander une correction de formulation.
-3. **`testerParcoursComplet`** → Google demande une **nouvelle autorisation**, cette fois
-   pour l'envoi de mail : `Examiner les autorisations` → `Paramètres avancés` →
-   `Accéder à … (non sécurisé)` → `Autoriser`.
-   Attendu : `0 échec(s)`, **et un mail reçu** à l'adresse `EMAIL_TEST`.
+Pour chacun : sélectionnez la fonction dans la liste déroulante en haut de l'éditeur,
+cliquez **Exécuter**, et lisez le rapport dans le panneau **Journal d'exécution** qui
+s'ouvre en bas. Une boîte de dialogue résume aussi le résultat dans le classeur.
 
-   > Ce test écrit dans `Reponses` pour votre foyer de test. C'est voulu.
+Chaque rapport se termine par une ligne du type `30 contrôle(s), 0 échec(s).`
+**Seul le nombre d'échecs compte : il doit être à zéro.**
 
-4. **`testerIsolationFoyer`** → attendu : `0 échec(s)`. Vérifie qu'un foyer ne peut pas
-   toucher les données d'un autre. Nécessite au moins **deux** foyers dans le Sheet.
-5. **`testerAntiAbus`** → attendu : `0 échec(s)`.
-   ⚠️ Ce test envoie jusqu'à 5 mails et **bloque votre adresse de test pendant une heure**.
-   Pour enchaîner d'autres tests ensuite, lancer `reinitialiserCompteurDeTest`.
+---
 
-Si un test échoue, **ne pas déployer** : envoyez-moi le rapport.
+**1. `testerFonctionsPures` — 30 contrôles, aucun effet de bord**
+
+Ni mail, ni écriture. Vérifie la neutralisation des formules, la troncature des champs,
+la génération et le hachage des codes, la normalisation des adresses, le refus des tokens
+inventés, et que `Config` est lisible.
+
+> Si celui-ci échoue, **arrêtez tout** : un fichier a été mal collé. Envoyez-moi le rapport.
+
+**2. `apercuMailCode` — aucun envoi**
+
+Affiche dans le journal le sujet, la version texte et la version HTML du mail que
+recevront les invités, avec un code factice `123456`.
+
+C'est le moment de relire la formulation. Les textes sont dans `Mail.gs`, fonction
+`construireMailCode_`. Dites-moi si vous voulez les changer.
+
+**3. `testerParcoursComplet` — 15 contrôles · envoie un vrai mail**
+
+C'est ici que **Google redemande l'autorisation**, parce que le script va envoyer un mail
+pour la première fois :
+
+> `Examiner les autorisations` → choisissez votre compte → l'écran
+> « Google n'a pas validé cette application » apparaît → **`Paramètres avancés`** →
+> **`Accéder à <nom du projet> (non sécurisé)`** → **`Autoriser`**.
+
+L'écran de consentement doit mentionner **deux** permissions : vos feuilles de calcul, et
+l'envoi de mail en votre nom. S'il en demande davantage, le manifeste n'a pas été pris en
+compte — revoyez l'étape 2.1.
+
+> « Non sécurisé » est normal et sans gravité : Google l'affiche pour tout script non
+> soumis à sa procédure de validation. Le script est le vôtre, vous venez de l'écrire.
+
+Le test déroule ensuite le parcours entier : demande de code, mauvais code refusé, bon
+code accepté, code rejoué refusé, soumission, double soumission sans doublon, relecture,
+déconnexion.
+
+**Attendu : `0 échec(s)`, et un mail reçu à l'adresse `EMAIL_TEST`.**
+
+> Ce test **écrit dans l'onglet `Reponses`** pour votre foyer de test, et laisse une
+> ligne par version dans `Historique`. C'est voulu. Vous pourrez vider ces lignes à la
+> main avant l'envoi des faire-part.
+
+**4. `testerIsolationFoyer` — 5 contrôles · écrit dans `Reponses`**
+
+Le plus important pour la vie privée de vos invités. Il ouvre une session sur un foyer,
+puis envoie des requêtes contenant le `foyer_id` **d'un autre foyer**, et vérifie que les
+données de ce dernier ne sont ni lues ni modifiées.
+
+**Nécessite au moins deux foyers** dans l'onglet `Foyers`, sinon il s'arrête en disant
+« un second foyer existe pour le test : ÉCHEC ».
+
+**5. `testerAntiAbus` — 5 contrôles · envoie jusqu'à 5 mails**
+
+Vérifie le piège à robots, le refus des adresses inconnues, le plafond de 5 demandes par
+heure et par adresse, et que ce plafond **survit au vidage du cache**.
+
+> ⚠️ **Après ce test, votre adresse de test ne pourra plus demander de code pendant une
+> heure.** C'est le comportement attendu. Pour enchaîner d'autres essais tout de suite,
+> lancez **`reinitialiserCompteurDeTest`**.
+
+Si ce test s'arrête sur « plafond mail atteint avant le plafond horaire », c'est que votre
+quota Gmail du jour est déjà entamé : réessayez demain, ce n'est pas un défaut.
+
+---
+
+**Si un test échoue, ne déployez pas.** Copiez-moi le rapport complet du journal
+d'exécution : il nomme le contrôle en échec et ce qu'il attendait.
 
 ### 2.4 Premier déploiement — 🖐 **votre décision**
 
-1. En haut à droite : **`Déployer`** → **`Nouveau déploiement`**.
-2. Roue dentée à côté de *Sélectionner le type* → **`Application Web`**.
-3. Remplir :
+C'est l'étape qui rend le backend accessible depuis Internet. Elle n'est jamais faite à
+votre place.
 
-   | Champ | Valeur |
-   |---|---|
-   | Description | `v0.2.0 — backend` |
-   | Exécuter en tant que | **Moi** (votre adresse) |
-   | Qui a accès | **Tout le monde** |
+1. En haut à droite de l'éditeur : **`Déployer`** → **`Nouveau déploiement`**.
+2. À gauche, roue dentée ⚙️ à côté de *Sélectionner le type* → cochez **`Application Web`**.
+3. Remplissez :
 
-   > « Tout le monde » est **obligatoire** : les invités n'ont pas de compte Google.
-   > Le script s'exécute avec vos droits, mais il ne fait que ce que son code autorise —
-   > c'est pour cela que tout passe par un code de connexion.
+   | Champ | Valeur | Pourquoi |
+   |---|---|---|
+   | Description | `v0.2.0 — backend` | n'importe quel texte, il aide à s'y retrouver dans l'historique |
+   | Exécuter en tant que | **Moi** *(votre adresse)* | le script doit écrire dans **votre** classeur et envoyer depuis **votre** Gmail |
+   | Qui a accès | **Tout le monde** | vos invités n'ont pas de compte Google |
 
-4. **`Déployer`**, puis **copier l'URL de l'application Web** : elle se termine par `/exec`.
-   Conservez-la, elle ira dans `assets/js/config.js` en Phase 3.
+   > **« Tout le monde » inquiète souvent, à tort.** Cela signifie que n'importe qui peut
+   > *appeler* l'URL — pas qu'il peut lire quoi que ce soit. Le script ne répond rien
+   > d'utile sans un code reçu par mail, puis un token valide. C'est précisément ce que
+   > `testerIsolationFoyer` et les 161 contrôles automatisés vérifient.
+   >
+   > L'alternative, « Toute personne disposant d'un compte Google », obligerait chaque
+   > invité à se connecter à Google : inutilisable ici.
+
+4. **`Déployer`**. Google affiche alors **l'URL de l'application Web**, qui se termine
+   par **`/exec`**. Copiez-la.
+
+   > Il existe aussi une URL en `/dev`, visible ailleurs dans l'interface. Elle ne
+   > fonctionne que pour vous, connecté à votre compte. **Ce n'est pas celle-là.**
+
+5. Notez cette URL **en dehors du dépôt** pour l'instant. Elle ira dans
+   [`assets/js/config.js`](../assets/js/config.js) juste après.
 
 ### 2.5 Vérifier depuis l'extérieur — 🖐
+
+Les tests de l'étape 2.3 s'exécutaient **à l'intérieur** de Google, avec vos droits. Ici
+on vérifie ce que voit un invité : une URL publique, appelée depuis votre terminal, sans
+aucun compte Google.
 
 Une seule commande, depuis la racine du dépôt :
 
 ```bash
-./outils/verifier-deploiement.sh "https://script.google.com/macros/s/.../exec"
+./outils/verifier-deploiement.sh "https://script.google.com/macros/s/VOTRE_ID/exec"
 ```
 
-Elle enchaîne onze contrôles : le service répond, la bonne version est en ligne, la date
-limite est bien lue dans `Config`, les erreurs sont propres, aucune trace technique ne
-fuit, et l'URL répond sans compte Google. **Aucun mail n'est envoyé** : toutes les adresses
-utilisées sont en `@example.com` et ne correspondent à aucun foyer.
+Les guillemets sont nécessaires : l'URL contient des caractères que le terminal
+interpréterait autrement.
 
-En cas d'échec, le script affiche la piste correspondante.
+Onze contrôles s'enchaînent :
 
-À la main, si vous préférez :
+| Ce qui est vérifié | Pourquoi ça compte |
+|---|---|
+| `ping` répond `ok` | le déploiement est vivant et accessible sans compte |
+| la version est `0.2.0` | c'est bien la **dernière** version qui est en ligne, pas une ancienne (C12) |
+| `dateLimite` est renvoyée | l'onglet `Config` est bien lu |
+| action inconnue, corps illisible | les requêtes malformées sont refusées proprement |
+| adresse inconnue, adresse mal formée | **aucun mail n'est envoyé** pour une adresse hors liste |
+| token inventé | une session fabriquée ne donne accès à rien |
+| aucune trace technique | une erreur ne révèle ni nom de fichier, ni pile d'appel |
+| HTTP 200 sans compte Google | le réglage « Tout le monde » est bien pris |
+
+**Aucun mail n'est envoyé** : toutes les adresses utilisées sont en `@example.com`, un
+domaine réservé qui ne correspond à aucun de vos foyers.
+
+Sortie attendue :
+
+```
+11 contrôles · 11 OK · 0 échec(s)
+Le déploiement est prêt. Reportez l'URL dans assets/js/config.js.
+```
+
+En cas d'échec, le script affiche la piste correspondante. Les trois cas réels :
+
+| Symptôme | Cause | Correction |
+|---|---|---|
+| Tout échoue, réponse en HTML | « Qui a accès » n'est pas sur **Tout le monde**, ou l'URL est en `/dev` | refaire l'étape 2.4 |
+| Version différente de `0.2.0` | du code a été modifié sans nouvelle version déployée | `Déployer` → **Gérer les déploiements** → crayon ✏️ → Version : **Nouvelle version** |
+| `ERREUR_SERVEUR` partout | un onglet manque ou un en-tête a été renommé | menu `Mariage` → **Vérifier les données**, puis **Initialiser / réparer le classeur** |
+
+À la main, si vous préférez voir la réponse brute :
 
 ```bash
-URL="https://script.google.com/macros/s/.../exec"
+URL="https://script.google.com/macros/s/VOTRE_ID/exec"
 curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
 ```
-
-Attendu, sur une seule ligne :
 
 ```json
 {"version":"0.2.0","dateLimite":"2027-04-30","reponsesOuvertes":true,"ok":true}
 ```
 
 > Le `-L` est **indispensable** : Apps Script répond par une redirection 302 vers
-> `googleusercontent.com` (C4). Sans `-L`, `curl` n'affiche rien. Le navigateur, lui,
-> suit la redirection tout seul.
+> `googleusercontent.com` (C4). Sans `-L`, `curl` n'affiche **rien du tout** et l'on croit
+> à tort que le déploiement est cassé. Le navigateur, lui, suit la redirection seul.
+
+**Dernière étape** : collez l'URL `/exec` dans [`assets/js/config.js`](../assets/js/config.js),
+à la place de `REMPLACER_PAR_VOTRE_ID`. C'est la seule ligne du dépôt à modifier.
 
 ### 2.6 À retenir pour la suite
 
