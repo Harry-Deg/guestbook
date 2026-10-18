@@ -39,7 +39,7 @@ Exécutés hors Google sur un simulateur, avec deux jeux de données.
 | Jeu sain | aucune anomalie | ✅ 0 / 0 |
 | CSV modèles du dépôt | aucune anomalie | ✅ 0 / 0 |
 
-### 2.2 Backend (Phase 2) — **122 contrôles, 122 passés**
+### 2.2 Backend (Phase 2) — **161 contrôles, 161 passés**
 
 Exécutés hors Google sur un simulateur reproduisant `SpreadsheetApp`, `CacheService`,
 `PropertiesService`, `MailApp`, `LockService`, `ContentService` et `Utilities`, avec une
@@ -61,6 +61,16 @@ horloge contrôlable pour tester les expirations.
 | Date limite dépassée | 4 | ✅ |
 | Journal sans donnée sensible (code, token, allergies, régime, commentaire) | 7 | ✅ |
 | Robustesse face à un classeur cassé (onglet supprimé) | 7 | ✅ |
+| **Régressions de la revue indépendante** (voir `SECURITE.md` §7) | **36** | ✅ |
+| └ B1 · injection de formule par le champ `email` du `Journal` | 7 | ✅ |
+| └ B3 · aucune clé persistante par adresse inconnue, invité servi malgré le sondage | 5 | ✅ |
+| └ B4 · `Historique` au-delà de la taille initiale de la feuille | 3 | ✅ |
+| └ A1 · appariement des noms malgré espaces insécables et doubles | 3 | ✅ |
+| └ A2 · personne nommée `constructor` ou `__proto__` | 3 | ✅ |
+| └ A3 · `presence` en liste blanche stricte | 7 | ✅ |
+| └ A5 · ligne vidée à la main dans `Reponses` | 4 | ✅ |
+| └ A7 · `EXPEDITEUR_ADRESSE` sans la portée `gmail.send` | 3 | ✅ |
+| └ B2 / A4 · les sections critiques prennent bien le verrou, sans imbrication | 4 | ✅ |
 
 > Ces tests s'exécutent sur un **simulateur**, pas sur Google. Ils prouvent la logique,
 > pas le comportement de l'infrastructure. Tout ce qui dépend réellement de Google est
@@ -140,4 +150,6 @@ Après le premier déploiement.
 |---|---|---|---|
 | 2026-10-18 | Contrôles qualité des données (simulateur) | 3 jeux, conformes | agent |
 | 2026-10-18 | Backend complet (simulateur) | 122 / 122 | agent |
+| 2026-10-18 | Revue sécurité indépendante | 4 bloquants, 7 à corriger — tous corrigés | relecteur |
+| 2026-10-18 | Backend après corrections (simulateur) | 161 / 161 | agent |
 | | Phase 2 dans Apps Script | ⏳ | Harry |

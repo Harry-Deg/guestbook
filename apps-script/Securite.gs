@@ -13,11 +13,14 @@ var DUREE_SESSION_S = 6 * 60 * 60; // validité d'un token : 6 heures (maximum d
 var ESSAIS_MAX_PAR_CODE = 5;
 var DEMANDES_MAX_PAR_HEURE = 5;
 var FENETRE_DEMANDES_MS = 60 * 60 * 1000;
+/** Plafond GLOBAL de demandes portant sur une adresse inconnue, par heure (B3). */
+var SONDAGES_INCONNUS_MAX_PAR_HEURE = 50;
 
 var PREFIXE_CODE = 'code:';
 var PREFIXE_SESSION = 'sess:';
 var PREFIXE_DEMANDES = 'dem:';
 var PREFIXE_MAILS = 'mails:';
+var PREFIXE_INCONNUS = 'inconnus:';
 var CLE_SEL = 'SEL_INSTALLATION';
 
 /** Au-delà de ce nombre d'entrées, un balayage des compteurs périmés est déclenché. */
@@ -107,6 +110,53 @@ function entierOuNull_(valeur, min, max) {
 }
 
 
+/**
+ * Clé d'appariement d'un nom de personne.
+ *
+ * DOIT être utilisée des deux côtés : sur le nom lu dans l'onglet Invites comme sur
+ * celui renvoyé par le client. Sans cela, un double espace ou une espace insécable
+ * dans le Sheet empêcherait l'appariement et le foyer ne pourrait plus répondre (A1).
+ */
+function cleNom_(nom) {
+  var s = assainirTexte_(nom, LONGUEURS_MAX.personne).toLowerCase();
+  return s.normalize ? s.normalize('NFC') : s;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Verrou
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Exécute une séquence lire-modifier-écrire sous verrou global.
+ *
+ * Apps Script autorise une trentaine d'exécutions simultanées : sans verrou, trente
+ * requêtes parallèles liraient le même compteur et écriraient toutes « 1 ». Tous les
+ * plafonds anti-abus seraient alors franchissables par simple concurrence (B2, A4).
+ *
+ * Les sections protégées doivent rester courtes : aucun envoi de mail à l'intérieur.
+ */
+function avecVerrou_(fonction, attenteMs) {
+  var verrou = LockService.getScriptLock();
+  if (!verrou.tryLock(attenteMs || 10000)) throw erreurApi_('SERVICE_INDISPONIBLE');
+  try {
+    return fonction();
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
+/** Écriture de propriété tolérante : un magasin saturé devient une erreur propre. */
+function ecrireProprieteOuEchouer_(cle, valeur) {
+  try {
+    PropertiesService.getScriptProperties().setProperty(cle, valeur);
+  } catch (e) {
+    journaliser_('', 'stockage', 'SERVICE_INDISPONIBLE', 'PropertiesService saturé');
+    throw erreurApi_('SERVICE_INDISPONIBLE');
+  }
+}
+
+
 /* ══════════════════════════════════════════════════════════════════════════
    Compteurs persistants (C7)
    ══════════════════════════════════════════════════════════════════════════ */
@@ -120,29 +170,70 @@ function entierOuNull_(valeur, min, max) {
  * ne puisse pas sonder la liste d'invités sans consommer son quota.
  */
 function demandeAutorisee_(email) {
-  var props = PropertiesService.getScriptProperties();
   var cle = PREFIXE_DEMANDES + hacher_(normaliserEmail_(email)).slice(0, 32);
-  var maintenant = Date.now();
 
-  var horodatages = [];
-  try {
-    horodatages = JSON.parse(props.getProperty(cle) || '[]');
-  } catch (e) {
-    horodatages = [];
-  }
+  return avecVerrou_(function () {
+    var props = PropertiesService.getScriptProperties();
+    var maintenant = Date.now();
 
-  horodatages = horodatages.filter(function (t) {
-    return typeof t === 'number' && maintenant - t < FENETRE_DEMANDES_MS;
+    var horodatages = [];
+    try {
+      horodatages = JSON.parse(props.getProperty(cle) || '[]');
+    } catch (e) {
+      horodatages = [];
+    }
+
+    horodatages = horodatages.filter(function (t) {
+      return typeof t === 'number' && maintenant - t < FENETRE_DEMANDES_MS;
+    });
+
+    if (horodatages.length >= DEMANDES_MAX_PAR_HEURE) {
+      ecrireProprieteOuEchouer_(cle, JSON.stringify(horodatages));
+      return false;
+    }
+
+    horodatages.push(maintenant);
+    ecrireProprieteOuEchouer_(cle, JSON.stringify(horodatages));
+    return true;
   });
+}
 
-  if (horodatages.length >= DEMANDES_MAX_PAR_HEURE) {
-    props.setProperty(cle, JSON.stringify(horodatages));
-    return false;
-  }
+/**
+ * Compteur GLOBAL des demandes portant sur une adresse inconnue, une seule clé par heure.
+ *
+ * Il existe pour deux raisons :
+ *  - borner le stockage : sans lui, chaque adresse inventée créerait une clé persistante,
+ *    et 10 000 requêtes suffiraient à saturer PropertiesService (500 Ko) de façon
+ *    définitive, bloquant toute connexion (B3) ;
+ *  - borner les lectures du Sheet provoquées par un robot qui sonde des adresses.
+ *
+ * Il ne compte QUE les adresses inconnues : un invité légitime ne peut donc jamais être
+ * bloqué par le bruit d'un attaquant.
+ */
+function sondageInconnuAutorise_() {
+  var cle = PREFIXE_INCONNUS + heureCourante_();
+  return avecVerrou_(function () {
+    var props = PropertiesService.getScriptProperties();
+    return Number(props.getProperty(cle) || 0) < SONDAGES_INCONNUS_MAX_PAR_HEURE;
+  });
+}
 
-  horodatages.push(maintenant);
-  props.setProperty(cle, JSON.stringify(horodatages));
-  return true;
+function compterSondageInconnu_() {
+  var cle = PREFIXE_INCONNUS + heureCourante_();
+  return avecVerrou_(function () {
+    var props = PropertiesService.getScriptProperties();
+    var n = Number(props.getProperty(cle) || 0) + 1;
+    ecrireProprieteOuEchouer_(cle, String(n));
+    if (n === SONDAGES_INCONNUS_MAX_PAR_HEURE) {
+      journaliser_('', 'sondage', 'TROP_DE_TENTATIVES',
+                   SONDAGES_INCONNUS_MAX_PAR_HEURE + ' adresses inconnues en 1 h');
+    }
+    return n;
+  });
+}
+
+function heureCourante_() {
+  return Utilities.formatDate(new Date(), classeur_().getSpreadsheetTimeZone(), 'yyyy-MM-dd-HH');
 }
 
 /**
@@ -157,9 +248,12 @@ function balayerCompteurs_() {
 
   var maintenant = Date.now();
   var aujourdhui = jourCourant_();
+  var cetteHeure = heureCourante_();
+  var conserver = {};
   var supprimees = 0;
 
   cles.forEach(function (cle) {
+    var garder = true;
     if (cle.indexOf(PREFIXE_DEMANDES) === 0) {
       var reste = [];
       try {
@@ -169,12 +263,25 @@ function balayerCompteurs_() {
       } catch (e) {
         reste = []; // valeur illisible : autant la supprimer
       }
-      if (!reste.length) { props.deleteProperty(cle); supprimees++; }
-    } else if (cle.indexOf(PREFIXE_MAILS) === 0 && cle !== PREFIXE_MAILS + aujourdhui) {
-      props.deleteProperty(cle);
-      supprimees++;
+      garder = reste.length > 0;
+    } else if (cle.indexOf(PREFIXE_MAILS) === 0) {
+      garder = cle === PREFIXE_MAILS + aujourdhui;
+    } else if (cle.indexOf(PREFIXE_INCONNUS) === 0) {
+      garder = cle === PREFIXE_INCONNUS + cetteHeure;
     }
+    if (garder) conserver[cle] = toutes[cle];
+    else supprimees++;
   });
+
+  // Une seule écriture : la suppression clé par clé coûtait des milliers d'allers-retours
+  // à l'intérieur de la requête d'un invité, et pouvait franchir la limite de 6 min (C9).
+  if (supprimees) {
+    try {
+      props.setProperties(conserver, true);
+    } catch (e) {
+      return 0;
+    }
+  }
   return supprimees;
 }
 
@@ -188,12 +295,57 @@ function mailsEnvoyesAujourdhui_() {
   return Number(v || 0);
 }
 
-function incrementerMailsEnvoyes_() {
-  var props = PropertiesService.getScriptProperties();
+/**
+ * Réserve un envoi AVANT de l'effectuer, sous verrou.
+ *
+ * Incrémenter après l'envoi laissait une course : trente requêtes simultanées lisaient
+ * le même compteur et dépassaient le plafond d'autant (B2). On réserve donc le créneau,
+ * puis on envoie hors du verrou — un envoi dure environ une seconde et sérialiser les
+ * envois sous verrou créerait une file d'attente.
+ */
+function reserverEnvoiMail_(config) {
+  var plafond = Number(config.PLAFOND_MAILS_JOUR || 80);
   var cle = PREFIXE_MAILS + jourCourant_();
-  var n = Number(props.getProperty(cle) || 0) + 1;
-  props.setProperty(cle, String(n));
-  return n;
+
+  return avecVerrou_(function () {
+    var props = PropertiesService.getScriptProperties();
+    var envoyes = Number(props.getProperty(cle) || 0);
+
+    if (envoyes >= plafond) {
+      journaliser_('', 'quota', 'SERVICE_INDISPONIBLE',
+                   'plafond applicatif atteint : ' + envoyes + '/' + plafond);
+      throw erreurApi_('SERVICE_INDISPONIBLE');
+    }
+
+    var restantGoogle = MailApp.getRemainingDailyQuota();
+    if (restantGoogle <= 0) {
+      journaliser_('', 'quota', 'SERVICE_INDISPONIBLE', 'quota Google épuisé');
+      throw erreurApi_('SERVICE_INDISPONIBLE');
+    }
+
+    ecrireProprieteOuEchouer_(cle, String(envoyes + 1));
+
+    if (restantGoogle <= 10 || plafond - envoyes <= 10) {
+      journaliser_('', 'quota', 'alerte',
+                   'reste ' + (plafond - envoyes - 1) + ' envois applicatifs, ' +
+                   restantGoogle + ' cote Google');
+    }
+    return { envoyes: envoyes + 1, plafond: plafond, restantGoogle: restantGoogle };
+  });
+}
+
+/** Rend le créneau réservé lorsque l'envoi a échoué. */
+function libererEnvoiMail_() {
+  var cle = PREFIXE_MAILS + jourCourant_();
+  try {
+    avecVerrou_(function () {
+      var props = PropertiesService.getScriptProperties();
+      var n = Number(props.getProperty(cle) || 0);
+      if (n > 0) props.setProperty(cle, String(n - 1));
+    }, 5000);
+  } catch (e) {
+    // Un créneau perdu est sans gravité : il sera récupéré le lendemain.
+  }
 }
 
 
@@ -235,6 +387,12 @@ function creerCode_(email, foyerId) {
  * nombre d'essais est épuisé.
  */
 function consommerCode_(email, codeSaisi) {
+  // Sous verrou : sans cela, des requêtes simultanées lisent le même compteur
+  // d'essais et le plafond de 5 tentatives devient franchissable (A4).
+  return avecVerrou_(function () { return consommerCodeSousVerrou_(email, codeSaisi); });
+}
+
+function consommerCodeSousVerrou_(email, codeSaisi) {
   var cache = CacheService.getScriptCache();
   var cle = cleCode_(email);
   var brut = cache.get(cle);

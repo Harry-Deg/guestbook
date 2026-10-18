@@ -8,6 +8,12 @@
  *          aucune image, aucun lien raccourci, une version texte toujours présente.
  */
 
+/**
+ * Passer à `true` UNIQUEMENT après avoir ajouté la portée gmail.send dans
+ * appsscript.json et réautorisé le script (voir §8 du brief).
+ */
+var PORTEE_GMAIL_DECLAREE = false;
+
 /** Échappe les caractères qui ont un sens en HTML. À appliquer à TOUTE valeur insérée. */
 function echapperHtml_(valeur) {
   return String(valeur == null ? '' : valeur)
@@ -18,38 +24,11 @@ function echapperHtml_(valeur) {
     .replace(/'/g, '&#39;');
 }
 
-/**
- * Vérifie qu'un envoi est possible, et lève SERVICE_INDISPONIBLE sinon.
- *
- * Deux garde-fous :
- *  1. le plafond applicatif PLAFOND_MAILS_JOUR, que nous maîtrisons ;
- *  2. le quota Google réel, qui peut déjà avoir été entamé par un autre usage du compte.
+/*
+ * Le contrôle de quota vit désormais dans Securite.gs (`reserverEnvoiMail_`) : il doit
+ * s'exécuter sous verrou et réserver le créneau AVANT l'envoi, sinon des requêtes
+ * simultanées dépassent le plafond (B2).
  */
-function verifierQuotaMail_(config) {
-  var plafond = Number(config.PLAFOND_MAILS_JOUR || 80);
-  var envoyes = mailsEnvoyesAujourdhui_();
-
-  if (envoyes >= plafond) {
-    journaliser_('', 'quota', 'SERVICE_INDISPONIBLE',
-                 'plafond applicatif atteint : ' + envoyes + '/' + plafond);
-    throw erreurApi_('SERVICE_INDISPONIBLE');
-  }
-
-  var restantGoogle = MailApp.getRemainingDailyQuota();
-  if (restantGoogle <= 0) {
-    journaliser_('', 'quota', 'SERVICE_INDISPONIBLE', 'quota Google épuisé');
-    throw erreurApi_('SERVICE_INDISPONIBLE');
-  }
-
-  // Avertissement anticipé : laisse le temps de réagir avant la coupure.
-  if (restantGoogle <= 10 || plafond - envoyes <= 10) {
-    journaliser_('', 'quota', 'alerte',
-                 'reste ' + (plafond - envoyes) + ' envois applicatifs, ' +
-                 restantGoogle + ' côté Google');
-  }
-
-  return { envoyes: envoyes, plafond: plafond, restantGoogle: restantGoogle };
-}
 
 /**
  * Construit le mail. Séparé de l'envoi pour pouvoir être relu et testé sans rien expédier
@@ -109,7 +88,8 @@ function construireMailCode_(code, config) {
 }
 
 /**
- * Envoie le code. Le quota doit avoir été vérifié juste avant par verifierQuotaMail_().
+ * Envoie le code. Le créneau d'envoi doit avoir été réservé juste avant par
+ * reserverEnvoiMail_() (Securite.gs).
  *
  * L'adresse d'expédition n'est jamais codée en dur (C13) :
  *  - EXPEDITEUR_ADRESSE vide  → MailApp, le mail part du compte qui exécute le script ;
@@ -132,12 +112,22 @@ function envoyerCode_(email, code, config) {
   };
   if (replyTo) options.replyTo = replyTo;
 
+  // L'alias exige la portée https://www.googleapis.com/auth/gmail.send, qui n'est pas
+  // déclarée dans appsscript.json. Plutôt que de laisser chaque requestCode échouer en
+  // ERREUR_SERVEUR le jour où les mariés remplissent la clé, on revient à MailApp et on
+  // trace l'incident (A7). Pour activer l'alias : ajouter la portée, réautoriser,
+  // puis retirer cette garde.
+  if (alias && !PORTEE_GMAIL_DECLAREE) {
+    journaliser_('', 'config', 'alerte',
+                 'EXPEDITEUR_ADRESSE ignorée : portée gmail.send non déclarée');
+    alias = '';
+    delete options.from;
+  }
+
   if (alias) {
     options.from = alias;
     GmailApp.sendEmail(email, message.sujet, message.texte, options);
   } else {
     MailApp.sendEmail(email, message.sujet, message.texte, options);
   }
-
-  incrementerMailsEnvoyes_();
 }

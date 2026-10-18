@@ -15,6 +15,7 @@ Statuts : `à faire` · `en cours` · `fait` · `reporté v2` · `abandonné`
 | M7 | `verifyCode` : 5 essais max, usage unique, création du token | P2 | fait |
 | M8 | `getRsvp` / `submitRsvp` / `logout` | P2 | fait |
 | M9 | Écriture idempotente sous verrou + `Historique` | P2 | fait (concurrence réelle à tester) |
+| M20 | Corrections de la revue sécurité indépendante (4 bloquants, 7 points) | P2 | fait |
 | M10 | Page d'informations pratiques (date, lieux, programme, accès) | P3 | à faire |
 | M11 | Écrans : email → code → formulaire → merci | P3 | à faire |
 | M12 | États chargement / erreur / succès / session expirée / clos | P3 | à faire |

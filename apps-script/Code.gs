@@ -94,7 +94,12 @@ function repondre_(objet) {
 /** true tant que la date limite n'est pas passée (comparaison en date locale du classeur). */
 function reponsesOuvertes_(config) {
   var limite = String(config.DATE_LIMITE || '').trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(limite)) return true; // pas de limite exploitable : on n'empêche rien
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(limite)) {
+    // On échoue ouvert plutôt que de bloquer tout le monde sur une faute de frappe,
+    // mais l'incident est tracé : sans cela, il passerait totalement inaperçu.
+    journaliser_('', 'config', 'alerte', 'DATE_LIMITE illisible : « ' + limite + ' »');
+    return true;
+  }
   return jourCourant_() <= limite;
 }
 
@@ -116,12 +121,16 @@ function actionPing_() {
 /**
  * requestCode — envoie un code à 6 chiffres.
  *
- * Ordre des contrôles choisi à dessein :
+ * Ordre des contrôles, choisi à dessein :
  *  1. honeypot, avant tout travail ;
- *  2. plafond horaire par adresse, AVANT de regarder si l'adresse est connue, pour
- *     qu'un robot ne puisse pas sonder la liste d'invités sans consommer son quota ;
+ *  2. forme de l'adresse — rejet muet, sans écrire dans le classeur (A6) ;
  *  3. existence du foyer ;
- *  4. quota d'envoi.
+ *  4. si l'adresse est inconnue : plafond GLOBAL de sondage, une seule clé par heure.
+ *     Il remplace l'ancien plafond par adresse, qui créait une clé persistante par
+ *     adresse inventée et permettait de saturer définitivement PropertiesService (B3).
+ *     Placé sur cette seule branche, il ne peut jamais bloquer un invité légitime ;
+ *  5. plafond par adresse, réservé aux adresses invitées ;
+ *  6. réservation du créneau d'envoi sous verrou, puis envoi hors verrou.
  */
 function actionRequestCode_(requete) {
   var email = normaliserEmail_(requete.email);
@@ -133,11 +142,29 @@ function actionRequestCode_(requete) {
     return {};
   }
 
+  // Rejet sur la forme : rien n'est journalisé, pas même une ligne. Chaque requête
+  // malformée écrivait sinon une ligne dans le classeur, sans aucune limite (A6).
   if (!email || !emailPlausible_(email)) {
-    journaliser_(email, 'requestCode', 'EMAIL_INCONNU', 'adresse mal formée');
     throw erreurApi_('EMAIL_INCONNU');
   }
 
+  // La recherche du foyer vient AVANT le plafond de sondage. L'inverse était tentant
+  // (il économise une lecture du Sheet) mais il faisait passer tout le monde par un
+  // compteur global : 50 sondages d'un robot auraient bloqué les vrais invités pendant
+  // une heure. Le plafond ne doit jamais pouvoir atteindre un invité légitime.
+  var foyerId = trouverFoyerParEmail_(email);
+
+  if (!foyerId) {
+    // Plafond GLOBAL, une seule clé par heure. Aucune clé n'est créée par adresse
+    // inconnue : sinon 10 000 adresses inventées saturaient PropertiesService de façon
+    // définitive, bloquant toute connexion (B3).
+    if (!sondageInconnuAutorise_()) throw erreurApi_('TROP_DE_TENTATIVES');
+    compterSondageInconnu_();
+    journaliser_(email, 'requestCode', 'EMAIL_INCONNU', '');
+    throw erreurApi_('EMAIL_INCONNU');
+  }
+
+  // Plafond par adresse, réservé aux adresses réellement invitées.
   if (!demandeAutorisee_(email)) {
     journaliser_(email, 'requestCode', 'TROP_DE_TENTATIVES',
                  'plus de ' + DEMANDES_MAX_PAR_HEURE + ' demandes en 1 h');
@@ -146,20 +173,20 @@ function actionRequestCode_(requete) {
 
   if (Math.random() < 0.05) balayerCompteurs_();
 
-  var foyerId = trouverFoyerParEmail_(email);
-  if (!foyerId) {
-    journaliser_(email, 'requestCode', 'EMAIL_INCONNU', '');
-    throw erreurApi_('EMAIL_INCONNU');
+  var config = lireConfig_();
+  var quota = reserverEnvoiMail_(config);   // réserve le créneau sous verrou
+  var code = creerCode_(email, foyerId);
+
+  try {
+    envoyerCode_(email, code, config);      // envoi hors du verrou
+  } catch (err) {
+    libererEnvoiMail_();
+    journaliser_(email, 'requestCode', 'SERVICE_INDISPONIBLE', 'envoi impossible');
+    throw erreurApi_('SERVICE_INDISPONIBLE');
   }
 
-  var config = lireConfig_();
-  var quota = verifierQuotaMail_(config);
-
-  var code = creerCode_(email, foyerId);
-  envoyerCode_(email, code, config);
-
   journaliser_(email, 'requestCode', 'ok',
-               'envois du jour : ' + (quota.envoyes + 1) + '/' + quota.plafond);
+               'envois du jour : ' + quota.envoyes + '/' + quota.plafond);
   return {};
 }
 
@@ -168,9 +195,10 @@ function actionVerifyCode_(requete) {
   var email = normaliserEmail_(requete.email);
   var saisi = String(requete.code == null ? '' : requete.code).replace(/\s/g, '');
 
-  if (!email || !/^\d{6}$/.test(saisi)) {
-    journaliser_(email, 'verifyCode', 'CODE_INVALIDE', 'format');
-    throw erreurApi_('CODE_INVALIDE');
+  // Le format de l'ADRESSE est contrôlé ici aussi : sans cela, verifyCode restait un
+  // moyen d'écrire une ligne de Journal par requête avec une chaîne arbitraire (A6).
+  if (!email || !emailPlausible_(email) || !/^\d{6}$/.test(saisi)) {
+    throw erreurApi_('CODE_INVALIDE'); // rejet sur la forme : rien à journaliser
   }
 
   var resultat;
@@ -241,6 +269,22 @@ function etatFoyer_(foyerId) {
    ══════════════════════════════════════════════════════════════════════════ */
 
 /**
+ * Lit le champ `presence` en liste blanche stricte.
+ *
+ * L'ancienne version traitait toute valeur non reconnue comme une absence : « oui »
+ * avec une espace finale, « 1 » ou « yes » déclaraient silencieusement le foyer absent,
+ * sur le seul champ dont dépendent le traiteur et le plan de table (A3).
+ */
+function lirePresence_(valeur) {
+  if (valeur === true) return true;
+  if (valeur === false) return false;
+  var v = String(valeur == null ? '' : valeur).trim().toLowerCase();
+  if (v === 'oui' || v === 'true') return true;
+  if (v === 'non' || v === 'false') return false;
+  throw erreurApi_('DONNEES_INVALIDES');
+}
+
+/**
  * submitRsvp — enregistre la réponse du foyer.
  *
  * Le client envoie une liste de personnes. Le serveur ne lui fait confiance sur rien :
@@ -255,7 +299,7 @@ function actionSubmitRsvp_(requete) {
   var config = lireConfig_();
 
   if (!reponsesOuvertes_(config)) {
-    journaliser_('', 'submitRsvp', 'DATE_LIMITE_DEPASSEE', '');
+    journaliser_('', 'submitRsvp', 'DATE_LIMITE_DEPASSEE', foyerId);
     throw erreurApi_('DATE_LIMITE_DEPASSEE');
   }
 
@@ -268,10 +312,13 @@ function actionSubmitRsvp_(requete) {
     throw erreurApi_('DONNEES_INVALIDES'); // garde-fou avant toute boucle
   }
 
-  var parNom = {};
-  foyer.personnes.forEach(function (p) { parNom[p.nom.toLowerCase()] = p; });
+  // Object.create(null) et non {} : avec un objet littéral, parNom['constructor']
+  // renvoie Object, et une personne nommée « constructor » échappait au plafond
+  // d'accompagnants tout en écrivant une ligne vide dans Reponses (A2).
+  var parNom = Object.create(null);
+  foyer.personnes.forEach(function (p) { parNom[p.cle] = p; });
 
-  var vus = {};
+  var vus = Object.create(null);
   var retenues = [];
 
   recues.forEach(function (brut) {
@@ -280,13 +327,13 @@ function actionSubmitRsvp_(requete) {
     var nomSaisi = assainirTexte_(brut.personne, LONGUEURS_MAX.personne);
     if (!nomSaisi) throw erreurApi_('DONNEES_INVALIDES');
 
-    var cle = nomSaisi.toLowerCase();
+    // Même fonction de clé que celle appliquée aux noms venant d'Invites (A1).
+    var cle = cleNom_(brut.personne);
     if (vus[cle]) throw erreurApi_('DONNEES_INVALIDES'); // même personne deux fois
     vus[cle] = true;
 
     var connue = parNom[cle] || null;
-    var presence = String(brut.presence) === 'true' || brut.presence === true ||
-                   String(brut.presence).toLowerCase() === 'oui';
+    var presence = lirePresence_(brut.presence);
 
     var personne = {
       // Pour une personne nommée, on réécrit le nom tel qu'il figure dans Invites :
@@ -317,7 +364,7 @@ function actionSubmitRsvp_(requete) {
   });
 
   // Toutes les personnes nommées du foyer doivent avoir été renseignées.
-  if (foyer.personnes.some(function (p) { return !vus[p.nom.toLowerCase()]; })) {
+  if (foyer.personnes.some(function (p) { return !vus[p.cle]; })) {
     throw erreurApi_('DONNEES_INVALIDES');
   }
 
@@ -334,7 +381,13 @@ function actionSubmitRsvp_(requete) {
   var ecriture = ecrireReponsesFoyer_(foyerId, retenues, commentaire);
 
   journaliser_('', 'submitRsvp', 'ok',
-               ecriture.lignes + ' ligne(s), ' + presents + ' présent(s)');
+               foyerId + ' : ' + ecriture.lignes + ' ligne(s), ' + presents + ' présent(s)');
+
+  // L'apostrophe de neutralisation protège le Sheet, elle n'a rien à faire sous les
+  // yeux de l'invité : il verrait « '=TEST() » au lieu de ce qu'il a écrit.
+  var sansApostrophe = function (v) {
+    return String(v || '').charAt(0) === "'" ? String(v).slice(1) : String(v || '');
+  };
 
   return {
     recap: {
@@ -343,16 +396,16 @@ function actionSubmitRsvp_(requete) {
       absents: retenues.length - presents,
       personnes: retenues.map(function (p) {
         return {
-          personne: p.personne,
+          personne: sansApostrophe(p.personne),
           type: p.type,
           estAccompagnant: p.estAccompagnant,
           presence: p.presence,
           age: p.age,
           regime: p.regime,
-          allergies: p.allergies
+          allergies: sansApostrophe(p.allergies)
         };
       }),
-      commentaire: commentaire,
+      commentaire: sansApostrophe(commentaire),
       majLe: ecriture.horodatage
     }
   };

@@ -21,3 +21,14 @@ Statut : `ouvert` · `paré` (parade implémentée et testée) · `accepté` · 
 | R14 | Un invité ne reçoit jamais son code (adresse erronée dans `Foyers`) | élevée | moyen | `verifierDonnees()` signale les emails invalides ou en double ; canal de contact direct affiché sur chaque écran d'erreur | P1/P3 | ouvert |
 | R15 | Dérive de périmètre : ajout de fonctionnalités v2 avant la livraison du MVP | moyenne | moyen | `BACKLOG.md` figé par phase, gate CP à chaque fin de phase | toutes | paré |
 | R16 | Les mariés modifient le Sheet et cassent les en-têtes ou les formules | moyenne | élevé | Recherche des colonnes par nom d'en-tête, `verifierEntetes_()` qui échoue explicitement, protection « avertissement » sur les onglets écrits par le script, menu `Mariage` → Vérifier les données, `initialiserSheet()` relançable pour réparer | P1/P5 | paré (consignes `GUIDE_MARIES.md` en P5) |
+
+## Risques ajoutés après la revue sécurité du 2026-10-18
+
+| # | Risque | Prob. | Impact | Parade | Phase | Statut |
+|---|---|---|---|---|---|---|
+| R17 | Exfiltration du Sheet par injection de formule dans un champ non assaini | moyenne | élevé | Les trois points d'écriture de données client passent par `assainirTexte_` ; colonnes sensibles en format texte ; test de régression dédié | P2 | paré |
+| R18 | Plafonds anti-abus franchis par requêtes concurrentes | moyenne | élevé | `LockService` sur tous les compteurs ; créneau d'envoi réservé avant l'envoi | P2 | paré (concurrence réelle à vérifier en §3.4 de `RECETTE.md`) |
+| R19 | Saturation définitive de `PropertiesService` bloquant toute connexion | faible | élevé | Aucune clé par adresse inconnue, compteur global unique, balayage en une écriture, échec propre si saturation | P2 | paré |
+| R20 | `Historique` atteint la taille maximale de la feuille en pleine campagne de réponses | élevée | élevé | `assurerLignes_()` avant chaque écriture, alerte de `verifierDonnees()` à 80 % | P2 | paré |
+| R21 | Un nom mal saisi dans `Invites` (espace insécable, trop long) rend un foyer incapable de répondre | moyenne | moyen | Clé d'appariement unique des deux côtés, signalée en **erreur** par `verifierDonnees()` | P2 | paré |
+| R22 | Une protection anti-abus dégrade le service des invités légitimes | moyenne | élevé | Règle D21 : tout plafond global est placé sur une branche d'échec, jamais sur le chemin nominal. À revérifier à chaque ajout de protection | toutes | paré |

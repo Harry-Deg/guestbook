@@ -152,3 +152,35 @@ lire un code en vol. Complète l'interdiction de journaliser ces valeurs.
 UUID v4, ramenés modulo 10^6.
 **Pourquoi** : `Math.random()` (xorshift128+) est prédictible si l'on observe assez de tirages.
 `getUuid()` s'appuie sur un générateur adapté. Le surcoût est nul.
+
+## 2026-10-18 — D20 · Revue sécurité indépendante avant tout déploiement
+**Décision** : le backend n'est pas déployable tant qu'une revue menée par un relecteur
+n'ayant pas écrit le code n'a pas été passée. La première a trouvé **4 bloquants et 7 points
+à corriger**, tous réels, tous corrigés.
+**Pourquoi** : les 122 tests existants validaient le comportement prévu et n'ont détecté
+aucun des 11 défauts. Ils couvraient les chemins pensés, pas les chemins oubliés — en
+particulier `journaliser_`, qui écrivait dans le classeur une donnée client non assainie.
+**Conséquence** : 36 tests de régression ajoutés, un par défaut ; la même revue sera refaite
+sur le front en P3 et sur l'ensemble en P4.
+**Détail** : `docs/SECURITE.md` §7.
+
+## 2026-10-18 — D21 · Le plafond anti-sondage ne doit jamais pouvoir atteindre un invité
+**Décision** : le plafond global de 50 adresses inconnues par heure est placé **après** la
+recherche du foyer, sur la seule branche « adresse inconnue ».
+**Pourquoi** : la première version du correctif le plaçait avant, pour économiser une lecture
+du Sheet. Le test de régression a montré que 50 requêtes d'un robot bloquaient alors tous les
+invités pendant une heure. Une lecture de feuille supplémentaire par requête hostile est un
+prix dérisoire comparé à un déni de service sur les vrais invités.
+**Règle générale retenue** : aucune protection anti-abus ne doit avoir un chemin par lequel
+un attaquant peut dégrader le service d'un utilisateur légitime.
+
+## 2026-10-18 — D22 · `EXPEDITEUR_ADRESSE` neutralisée par un drapeau explicite
+**Décision** : `Mail.gs` porte `PORTEE_GMAIL_DECLAREE = false`. Tant que ce drapeau est faux,
+une `EXPEDITEUR_ADRESSE` renseignée dans `Config` est **ignorée** (repli sur `MailApp`) avec
+une alerte au `Journal`, et `verifierDonnees()` la signale en erreur.
+**Pourquoi** : la branche alias appelle `GmailApp`, qui exige une portée OAuth non déclarée.
+Sans cette garde, le jour où les mariés rempliraient cette case — que le modèle de données
+présente comme prévue — **chaque connexion** échouerait en `ERREUR_SERVEUR`, sans message
+compréhensible. Un piège latent dans une case que l'on invite à remplir n'est pas acceptable.
+**Pour activer l'alias** : ajouter la portée dans `appsscript.json`, réautoriser, passer le
+drapeau à `true`. À documenter dans `MIGRATION_MAIL.md` (§8 du brief).

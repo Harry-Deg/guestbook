@@ -172,9 +172,30 @@ function emailsDuFoyer_(valeur) {
     .filter(function (e) { return e !== ''; });
 }
 
+/** Nom tel qu'il devrait être saisi : espaces normalisés, sans caractère invisible. */
+function cleNomLisible_(nom) {
+  return String(nom == null ? '' : nom)
+    .replace(/[\u0000-\u001F\u007F\u00A0\u200B-\u200D\uFEFF]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Contrôle de forme volontairement permissif : on refuse l'absurde, pas l'exotique. */
 function emailPlausible_(email) {
   return /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/.test(email);
+}
+
+/**
+ * Garantit que la feuille possède assez de lignes pour une écriture.
+ *
+ * Contrairement à appendRow, getRange(...).setValues() n'agrandit PAS la feuille : il
+ * lève dès que la ligne visée dépasse getMaxRows(). Un onglet créé par insertSheet en
+ * compte 1 000, ce qu'Historique franchit avant la date limite — chaque soumission
+ * aurait alors échoué après avoir déjà écrit dans Reponses (B4).
+ */
+function assurerLignes_(feuille, derniereLigne) {
+  var max = feuille.getMaxRows();
+  if (derniereLigne > max) feuille.insertRowsAfter(max, derniereLigne - max + 200);
 }
 
 /** Horodatage ISO 8601 dans le fuseau du classeur. */
@@ -191,12 +212,15 @@ function journaliser_(email, action, resultat, detail) {
   try {
     var feuille = classeur_().getSheetByName('Journal');
     if (!feuille) return;
+    // TOUTES les valeurs sont assainies : `email` arrive directement du client et, sans
+    // neutralisation, une adresse commençant par « = » devenait une formule exécutée
+    // avec les droits du propriétaire du classeur, sans aucune authentification (B1).
     feuille.appendRow([
       maintenantIso_(),
-      normaliserEmail_(email),
-      String(action || ''),
-      String(resultat || ''),
-      String(detail == null ? '' : detail).slice(0, 200)
+      assainirTexte_(normaliserEmail_(email), 120),
+      assainirTexte_(action, 40),
+      assainirTexte_(resultat, 40),
+      assainirTexte_(detail, 200)
     ]);
   } catch (e) {
     // Un échec de journalisation ne doit pas faire échouer l'action de l'invité.
@@ -233,6 +257,10 @@ function initialiserSheet() {
   construireTraiteur_(ss.getSheetByName('Traiteur'));
 
   if (creees.indexOf('Config') >= 0) amorcerConfig_(ss.getSheetByName('Config'));
+
+  // Généré ici plutôt qu'à la première requête : deux requêtes simultanées pourraient
+  // sinon créer deux sels, le second invalidant les codes déjà envoyés.
+  selInstallation_();
 
   supprimerFeuilleParDefaut_(ss);
   ORDRE_ONGLETS.forEach(function (nom, i) { ss.setActiveSheet(ss.getSheetByName(nom)); ss.moveActiveSheet(i + 1); });
@@ -282,8 +310,9 @@ function configurerOnglet_(feuille, nom) {
 
   // Les champs libres et les identifiants sont forcés en texte brut : évite qu'un
   // nom ou un identifiant soit réinterprété (dates, nombres, notation scientifique).
-  ['foyer_id', 'emails', 'personne', 'allergies', 'commentaire', 'notes_maries',
-   'nom_affichage', 'cle', 'valeur', 'soumission_id', 'detail'].forEach(function (champ) {
+  ['foyer_id', 'emails', 'email', 'personne', 'allergies', 'commentaire', 'notes_maries',
+   'nom_affichage', 'cle', 'valeur', 'soumission_id', 'action', 'resultat', 'detail']
+  .forEach(function (champ) {
     var i = def.colonnes.indexOf(champ);
     if (i >= 0) {
       feuille.getRange(2, i + 1, Math.max(feuille.getMaxRows() - 1, 1), 1)
@@ -572,8 +601,15 @@ function verifierDonnees() {
     if (!nom) {
       erreur('Invites', l, 'personne vide');
     } else if (nom.length > LONGUEURS_MAX.personne) {
-      avertir('Invites', l, 'nom de ' + nom.length + ' caractères (maximum ' +
-              LONGUEURS_MAX.personne + ')');
+      // ERREUR et non avertissement : au-delà de la longueur maximale, le nom renvoyé
+      // par le client est tronqué, l'appariement échoue et le foyer ne peut plus
+      // répondre du tout (A1).
+      erreur('Invites', l, 'nom de ' + nom.length + ' caractères, maximum ' +
+             LONGUEURS_MAX.personne + ' — ce foyer ne pourra pas répondre');
+    } else if (nom !== cleNomLisible_(nom)) {
+      // Espaces doubles ou insécables : invisibles à l'œil, ils cassaient l'appariement.
+      erreur('Invites', l, 'le nom contient des espaces doubles ou insécables — ' +
+             'remplacer par « ' + cleNomLisible_(nom) + ' »');
     }
 
     var type = String(p.type_personne || '').trim().toLowerCase();
@@ -733,6 +769,25 @@ function verifierDonnees() {
   ['REPLY_TO', 'CONTACT_MARIES', 'EXPEDITEUR_ADRESSE'].forEach(function (cle) {
     if (conf[cle] && !emailPlausible_(normaliserEmail_(conf[cle]))) {
       erreur('Config', '—', cle + ' n\'est pas une adresse valide : « ' + conf[cle] + ' »');
+    }
+  });
+
+  if (conf.EXPEDITEUR_ADRESSE && typeof PORTEE_GMAIL_DECLAREE !== 'undefined' &&
+      !PORTEE_GMAIL_DECLAREE) {
+    erreur('Config', '—', 'EXPEDITEUR_ADRESSE est renseignée mais la portée gmail.send ' +
+           'n\'est pas déclarée : la clé est ignorée et les mails partent du compte du ' +
+           'script. Voir §8 du brief avant de l\'utiliser.');
+  }
+
+  /* ---- Volumétrie des onglets en ajout seul ---- */
+  ['Historique', 'Journal'].forEach(function (nom) {
+    var f = classeur_().getSheetByName(nom);
+    if (!f) return;
+    var occupe = f.getLastRow();
+    var max = f.getMaxRows();
+    if (occupe > max * 0.8) {
+      avertir(nom, '—', occupe + ' lignes sur ' + max +
+              ' — penser à archiver puis purger cet onglet');
     }
   });
 
@@ -908,8 +963,12 @@ function chargerFoyer_(foyerId) {
   var personnes = ti.objets
     .filter(function (p) { return String(p.foyer_id || '').trim() === foyerId; })
     .map(function (p) {
+      var nom = String(p.personne || '').trim();
       return {
-        nom: String(p.personne || '').trim(),
+        nom: nom,
+        // Clé d'appariement calculée exactement comme celle du nom renvoyé par le
+        // client, sans quoi une espace insécable dans le Sheet bloquerait le foyer (A1).
+        cle: cleNom_(nom),
         type: String(p.type_personne || 'adulte').trim().toLowerCase()
       };
     })
@@ -997,7 +1056,11 @@ function ecrireReponsesFoyer_(foyerId, personnes, commentaire) {
 
     var nouvelles = personnes.map(function (p) {
       var champs = valeurParChamp(p);
-      return t.entetes.map(function (e) { return e in champs ? champs[e] : ''; });
+      return t.entetes.map(function (e) {
+        // hasOwnProperty et non `in` : un en-tête nommé « constructor » ou « toString »
+        // écrirait sinon une fonction dans une cellule (A2).
+        return Object.prototype.hasOwnProperty.call(champs, e) ? champs[e] : '';
+      });
     });
 
     var conservees = t.lignes.filter(function (l) {
@@ -1006,12 +1069,16 @@ function ecrireReponsesFoyer_(foyerId, personnes, commentaire) {
 
     var toutes = conservees.concat(nouvelles);
     var nbColonnes = t.entetes.length;
-    var ancienNb = t.lignes.length;
 
-    if (ancienNb > 0) {
-      t.feuille.getRange(2, 1, ancienNb, nbColonnes).clearContent();
+    // On efface d'après la DERNIÈRE LIGNE RÉELLE de la feuille, pas d'après le nombre de
+    // lignes non vides : lireOnglet_ ignore les lignes vides, et une ligne effacée à la
+    // main par les mariés aurait laissé une ligne orpheline sous le bloc réécrit (A5).
+    var occupees = Math.max(t.feuille.getLastRow() - 1, 0);
+    if (occupees > 0) {
+      t.feuille.getRange(2, 1, occupees, nbColonnes).clearContent();
     }
     if (toutes.length > 0) {
+      assurerLignes_(t.feuille, 1 + toutes.length);
       t.feuille.getRange(2, 1, toutes.length, nbColonnes).setValues(toutes);
     }
 
@@ -1025,8 +1092,16 @@ function ecrireReponsesFoyer_(foyerId, personnes, commentaire) {
 
 /** Ajoute une version complète dans Historique, en une seule écriture. */
 function archiverDansHistorique_(soumissionId, horodatage, foyerId, personnes, commentaire) {
-  var t = lireOnglet_('Historique');
-  verifierEntetes_('Historique', t.index);
+  var feuille = classeur_().getSheetByName('Historique');
+  if (!feuille) throw new Error("Onglet introuvable : Historique. Exécutez initialiserSheet().");
+
+  // Seule la ligne d'en-tête est lue : relire tout l'onglet à chaque soumission coûtait
+  // de plus en plus cher, à l'intérieur du verrou.
+  var entetes = feuille.getRange(1, 1, 1, feuille.getLastColumn()).getValues()[0]
+    .map(function (e) { return String(e).trim(); });
+  var index = {};
+  entetes.forEach(function (e, i) { if (e) index[e] = i; });
+  verifierEntetes_('Historique', index);
 
   var lignes = personnes.map(function (p) {
     var champs = {
@@ -1043,10 +1118,13 @@ function archiverDansHistorique_(soumissionId, horodatage, foyerId, personnes, c
       commentaire: commentaire || '',
       maj_le: horodatage
     };
-    return t.entetes.map(function (e) { return e in champs ? champs[e] : ''; });
+    return entetes.map(function (e) {
+      return Object.prototype.hasOwnProperty.call(champs, e) ? champs[e] : '';
+    });
   });
 
   if (!lignes.length) return;
-  t.feuille.getRange(t.feuille.getLastRow() + 1, 1, lignes.length, t.entetes.length)
-           .setValues(lignes);
+  var depart = feuille.getLastRow() + 1;
+  assurerLignes_(feuille, depart + lignes.length - 1);
+  feuille.getRange(depart, 1, lignes.length, entetes.length).setValues(lignes);
 }
