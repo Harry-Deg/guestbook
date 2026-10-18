@@ -128,6 +128,31 @@ d'invités**.
 Durée : environ 20 minutes. **Rien dans cette phase n'est lancé sans votre accord** :
 c'est vous qui cliquez sur Déployer.
 
+### 2.0 ⚠️ Recoller `Sheet.gs` et relancer l'initialisation — 🖐
+
+**À faire avant tout le reste si vous avez exécuté la Phase 1 avant le 18 octobre 2026.**
+
+`Sheet.gs` a beaucoup changé depuis : accès métier ajoutés, et surtout les corrections
+de la revue de sécurité. Deux d'entre elles ne prennent effet qu'en **relançant
+l'initialisation**, parce qu'elles modifient le **format des colonnes du classeur** :
+
+- les colonnes `email`, `action` et `resultat` de l'onglet `Journal` doivent être en
+  **format texte**. C'est la seconde barrière contre l'injection de formule par le champ
+  email : sans elle, une seule barrière subsiste au lieu de deux ;
+- le sel de hachage est désormais créé à l'initialisation plutôt qu'à la première requête,
+  pour éviter que deux requêtes simultanées n'en créent deux et n'invalident des codes déjà
+  envoyés.
+
+Marche à suivre :
+
+1. Ouvrir `Sheet.gs` dans l'éditeur Apps Script, **tout sélectionner, tout remplacer** par
+   le contenu actuel de [`apps-script/Sheet.gs`](../apps-script/Sheet.gs). Enregistrer.
+2. Menu **`Mariage`** → **`Initialiser / réparer le classeur`** (ou exécuter
+   `initialiserSheet` depuis l'éditeur).
+3. Menu **`Mariage`** → **`Vérifier les données`** : toujours **0 erreur**.
+
+Aucune donnée n'est perdue : `initialiserSheet()` ne supprime jamais de ligne.
+
 ### 2.1 Copier les fichiers de script — 🖐
 
 Dans l'éditeur Apps Script, créer un fichier par source et y coller le contenu du dépôt.
@@ -205,7 +230,20 @@ Si un test échoue, **ne pas déployer** : envoyez-moi le rapport.
 
 ### 2.5 Vérifier depuis l'extérieur — 🖐
 
-Dans un terminal, en remplaçant `URL` par votre URL `/exec` :
+Une seule commande, depuis la racine du dépôt :
+
+```bash
+./outils/verifier-deploiement.sh "https://script.google.com/macros/s/.../exec"
+```
+
+Elle enchaîne onze contrôles : le service répond, la bonne version est en ligne, la date
+limite est bien lue dans `Config`, les erreurs sont propres, aucune trace technique ne
+fuit, et l'URL répond sans compte Google. **Aucun mail n'est envoyé** : toutes les adresses
+utilisées sont en `@example.com` et ne correspondent à aucun foyer.
+
+En cas d'échec, le script affiche la piste correspondante.
+
+À la main, si vous préférez :
 
 ```bash
 URL="https://script.google.com/macros/s/.../exec"
@@ -221,19 +259,6 @@ Attendu, sur une seule ligne :
 > Le `-L` est **indispensable** : Apps Script répond par une redirection 302 vers
 > `googleusercontent.com` (C4). Sans `-L`, `curl` n'affiche rien. Le navigateur, lui,
 > suit la redirection tout seul.
-
-Autres vérifications utiles :
-
-```bash
-# action inconnue : doit répondre une erreur propre, en HTTP 200
-curl -sL -H "Content-Type: text/plain" -d '{"action":"nimportequoi"}' "$URL"
-# attendu : {"ok":false,"error":"DONNEES_INVALIDES"}
-
-# adresse inconnue : ne doit envoyer aucun mail
-curl -sL -H "Content-Type: text/plain" \
-  -d '{"action":"requestCode","email":"inconnu@example.com","website":""}' "$URL"
-# attendu : {"ok":false,"error":"EMAIL_INCONNU"}
-```
 
 ### 2.6 À retenir pour la suite
 
@@ -252,7 +277,9 @@ curl -sL -H "Content-Type: text/plain" \
 - [ ] Les cinq fonctions de test passent avec `0 échec(s)`.
 - [ ] Un mail de code a été reçu, lu sur mobile, et **n'est pas en spam**.
 - [ ] `ping` répond correctement en `curl` depuis l'extérieur.
-- [ ] L'URL `/exec` est notée **en dehors du dépôt**.
+- [ ] `./outils/verifier-deploiement.sh "<URL>"` : 11 contrôles, 0 échec.
+- [ ] L'URL `/exec` est notée **en dehors du dépôt**, et reportée dans
+      [`assets/js/config.js`](../assets/js/config.js).
 
 ---
 
