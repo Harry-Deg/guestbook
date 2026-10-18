@@ -7,30 +7,38 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 /* ── Identité visuelle ─────────────────────────────────────────────────────
-   Valeurs neutres par défaut. Les mariés choisiront couleurs et typographies
-   plus tard (§9 du brief) : il suffira de changer ce bloc.
+   Palette tirée des photos du couple, par échantillonnage et non à l'œil :
+   le marine du costume est la famille dominante (9 % des pixels), devant les
+   blancs de la robe et des boiseries, et les ivoires dorés des panneaux
+   parisiens et de la façade du château.
 
-   Pour utiliser une police Google Fonts, ajouter dans <head> :
-     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=...">
-   et ajouter à la CSP : style-src 'self' https://fonts.googleapis.com;
-                         font-src https://fonts.gstatic.com;
+       #223244  marine du costume        → --couleur-principale
+       #ffffff  robe, boiseries, fleurs  → --couleur-carte
+       #ddccbb  panneaux, façade ocre    → --couleur-fond
+       #bb9976  dorures                  → --couleur-or
+
+   Chaque couple couleur/fond a été passé au calcul de ratio WCAG. L'or des
+   photos (#9c7b3f) ne passait qu'à 3,6:1 : il est assombri à #806530 (5,0:1)
+   dès qu'il porte du texte, et sa version claire est réservée aux filets
+   décoratifs posés sur le marine, où elle atteint 6,2:1.
    ────────────────────────────────────────────────────────────────────────── */
 :root {
-  --couleur-fond: #faf8f4;
+  --couleur-fond: #f7f3ec;
   --couleur-carte: #ffffff;
-  --couleur-principale: #7a6a52;
-  --couleur-principale-sombre: #5d5040;
-  --couleur-texte: #2c2a26;
-  --couleur-texte-doux: #5f5a52;
-  --couleur-bordure: #e0dbd1;
-  /* Bordure des champs et boutons : 3,4:1 minimum sur les deux fonds — WCAG 1.4.11,
-     contraste des composants d'interface. Ne pas éclaircir sans revérifier. */
-  --couleur-bordure-forte: #948b7b;
-  --couleur-erreur: #a4342b;
-  --couleur-erreur-fond: #fdf1f0;
-  --couleur-succes: #2f6b4f;
-  --couleur-succes-fond: #eff6f2;
+  --couleur-principale: #1e2d44;        /* marine du costume */
+  --couleur-principale-sombre: #152136;
+  --couleur-or: #806530;                /* or lisible : 5,5:1 sur blanc */
+  --couleur-or-clair: #c9a961;          /* filets sur marine uniquement, jamais de texte */
+  --couleur-texte: #1d222b;
+  --couleur-texte-doux: #575f6d;
+  --couleur-bordure: #e6dfd2;
+  /* Bordure des champs : 3,2:1 minimum sur les deux fonds — WCAG 1.4.11,
+     contraste des composants d'interface. Ne pas éclaircir sans recalculer. */
+  --couleur-bordure-forte: #8d8878;
+  --couleur-erreur: #9e2f28;
+  --couleur-erreur-fond: #fdf2f1;
+  --couleur-succes: #2a6049;
+  --couleur-succes-fond: #eef5f1;
 
   --police-titres: Iowan Old Style, Palatino, Georgia, 'Times New Roman', serif;
   --police-texte: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
@@ -39,12 +47,27 @@
   --rayon: 10px;
   --cible-tactile: 44px;      /* jamais en dessous : doigt d'adulte */
   --largeur-contenu: 34rem;
-  --ombre: 0 1px 2px rgba(44, 42, 38, .06), 0 4px 16px rgba(44, 42, 38, .05);
+  --ombre: 0 1px 2px rgba(30, 45, 68, .06), 0 6px 24px rgba(30, 45, 68, .07);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
+
+/* Photo de fond, posée une fois pour toute la page et voilée d'ivoire pour
+   rester une texture. En pseudo-élément fixe plutôt qu'en
+   `background-attachment: fixed`, que Safari iOS rend mal. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(247, 243, 236, .93), rgba(247, 243, 236, .965)),
+    url('../img/fond.jpg');
+  background-size: cover;
+  background-position: center;
+}
 
 body {
   margin: 0;
@@ -96,25 +119,66 @@ body {
   margin: 0 auto;
 }
 
+/* ── Bandeau photographique ────────────────────────────────────────────── */
+
 .bandeau {
+  position: relative;
+  margin: 0 -1rem 1.5rem;            /* pleine largeur malgré la marge du body */
+  min-height: min(80vh, 34rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2rem 1.5rem 2.25rem;
   text-align: center;
-  padding: 2.5rem 0 1.5rem;
+  color: #fff;
+  background-color: var(--couleur-principale-sombre);   /* visible si l'image manque */
+  background-image:
+    linear-gradient(to bottom,
+      rgba(21, 33, 54, .10) 0%,
+      rgba(21, 33, 54, .10) 38%,
+      rgba(21, 33, 54, .62) 66%,
+      rgba(21, 33, 54, .90) 100%),
+    url('../img/accueil.jpg');
+  background-size: cover;
+  background-position: center 12%;
+  background-repeat: no-repeat;
 }
 
 .bandeau__prenoms {
   font-family: var(--police-titres);
-  font-size: clamp(2rem, 9vw, 2.75rem);
+  font-size: clamp(2.25rem, 10vw, 3.25rem);
   font-weight: 400;
-  line-height: 1.15;
-  margin: 0 0 .5rem;
+  line-height: 1.1;
+  margin: 0 0 .75rem;
+  color: #fff;
+}
+
+/* Filet doré : le seul emprunt direct aux dorures des photos. */
+.bandeau__filet {
+  width: 3.5rem;
+  height: 1px;
+  margin: 0 auto .75rem;
+  background: var(--couleur-or-clair);
+  border: 0;
 }
 
 .bandeau__date {
   margin: 0;
-  color: var(--couleur-texte-doux);
-  font-size: .95rem;
-  letter-spacing: .08em;
+  color: #fff;
+  font-size: .9rem;
+  letter-spacing: .18em;
   text-transform: uppercase;
+}
+
+/* Bandeau photographique inséré dans une carte (programme, remerciement). */
+.photo-bande {
+  display: block;
+  width: calc(100% + 2.5rem);
+  margin: -1.5rem -1.25rem 1.5rem;
+  height: 11rem;
+  object-fit: cover;
+  border-radius: var(--rayon) var(--rayon) 0 0;
+  background: var(--couleur-fond);
 }
 
 .carte {
@@ -124,6 +188,7 @@ body {
   box-shadow: var(--ombre);
   padding: 1.5rem 1.25rem;
   margin-bottom: 1.25rem;
+  overflow: hidden;      /* laisse .photo-bande épouser les coins arrondis */
 }
 
 h2 {
@@ -131,6 +196,18 @@ h2 {
   font-size: 1.5rem;
   font-weight: 400;
   margin: 0 0 .75rem;
+  color: var(--couleur-principale);
+}
+
+/* Petit filet doré sous les titres : rappel discret des dorures des photos. */
+h2::after {
+  content: '';
+  display: block;
+  width: 2.25rem;
+  height: 1px;
+  margin-top: .6rem;
+  background: var(--couleur-or);
+  opacity: .5;
 }
 
 h3 {
@@ -159,7 +236,7 @@ p:last-child { margin-bottom: 0; }
 .programme__heure {
   flex: 0 0 4.5rem;
   font-variant-numeric: tabular-nums;
-  color: var(--couleur-principale);
+  color: var(--couleur-or);
   font-weight: 600;
 }
 

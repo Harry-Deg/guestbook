@@ -38,8 +38,12 @@
   <p>Les 5 écrans et tous les états, empilés sur une seule page. Rien n'est connecté :
      aucun bouton n'envoie quoi que ce soit, les données sont inventées.</p>
   <ul>
-    <li>Les couleurs et la typographie sont <strong>neutres par défaut</strong> — les mariés
-        choisiront (§9). Tout se change dans une dizaine de lignes en haut de <code>style.css</code>.</li>
+    <li>La palette est <strong>tirée des photos par échantillonnage</strong> : le marine du
+        costume est la couleur dominante, devant les blancs et les ivoires dorés des
+        boiseries. Tout se change dans une dizaine de lignes en haut de <code>style.css</code>.</li>
+    <li>Les photos sont en fond : bandeau d'accueil, texture de page voilée d'ivoire, et
+        bandeaux dans les cartes. Le texte reste toujours sur un fond plein ou sous un
+        dégradé mesuré, jamais directement sur une zone claire.</li>
     <li>À tester <strong>au pouce sur un téléphone</strong> : c'est la cible.</li>
     <li>Les cases « présent / absent » et « j'ajoute un accompagnant » réagissent vraiment.</li>
   </ul>
@@ -52,6 +56,7 @@
 <div class="maquette-ecran">
   <header class="bandeau">
     <p class="bandeau__prenoms">Marie &amp; Paul</p>
+    <hr class="bandeau__filet">
     <p class="bandeau__date">Samedi 12 juin 2027</p>
   </header>
 
@@ -63,6 +68,7 @@
   </section>
 
   <section class="carte">
+    <img class="photo-bande" src="assets/img/table.jpg" alt="" width="1000" height="814">
     <h2>Le programme</h2>
     <ul class="programme">
       <li>
@@ -97,6 +103,7 @@
   </section>
 
   <section class="carte">
+    <img class="photo-bande" src="assets/img/couple.jpg" alt="" width="793" height="1000">
     <h2>Venir et dormir</h2>
     <p><strong>En voiture</strong> — A42, sortie 7, puis 10 minutes. Parking gratuit sur place.</p>
     <p><strong>En train</strong> — Gare d'Exempleville, à 15 minutes. Une navette est prévue,
@@ -377,6 +384,7 @@
 
 <div class="maquette-ecran">
   <section class="carte">
+    <img class="photo-bande" src="assets/img/detail.jpg" alt="" width="764" height="800">
     <div class="message message--succes" role="status">
       <p><strong>C'est enregistré, merci&nbsp;!</strong></p>
     </div>

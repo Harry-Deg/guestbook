@@ -131,6 +131,11 @@ Après le premier déploiement.
 - [ ] Console navigateur : aucune violation CSP en usage normal.
 - [ ] Le token n'est pas dans l'URL, ni dans `localStorage`.
 
+**Photos**
+- [ ] Le bandeau d'accueil reste lisible sur un écran large comme sur un téléphone (le recadrage `cover` change la zone visible).
+- [ ] Les photos se chargent en moins de 2 s sur un réseau mobile moyen.
+- [ ] Si une image manque, le bandeau reste lisible (fond marine de repli).
+
 **Accessibilité et compatibilité**
 - [ ] iPhone Safari, Android Chrome, Firefox et Edge sur ordinateur.
 - [ ] Navigation clavier complète sur le formulaire.

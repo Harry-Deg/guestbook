@@ -185,6 +185,35 @@ compréhensible. Un piège latent dans une case que l'on invite à remplir n'est
 **Pour activer l'alias** : ajouter la portée dans `appsscript.json`, réautoriser, passer le
 drapeau à `true`. À documenter dans `MIGRATION_MAIL.md` (§8 du brief).
 
+## 2026-10-18 — D23bis · Palette tirée des photos par échantillonnage
+**Décision** : la palette neutre de D24 est remplacée par celle des photos du couple, mesurée
+et non estimée à l'œil : **marine #1e2d44** (le costume, famille la plus présente — 9 % des
+pixels), **ivoire #f7f3ec** (boiseries parisiennes, façade ocre du château), **or #806530**
+(les dorures), blanc des cartes.
+**Pourquoi** : Harry a demandé une inspiration « mariage chic » tirée des photos. Échantillonner
+plutôt que juger à l'œil évite de confondre l'impression dominante et la couleur dominante.
+**Correction imposée par l'accessibilité** : l'or réel des photos (#9c7b3f) ne donne que 3,6:1
+sur ivoire. Il est assombri à **#806530** (5,0:1) dès qu'il porte du texte ; sa version claire
+#c9a961 est réservée aux filets décoratifs posés sur le marine (6,2:1), jamais à du texte.
+
+## 2026-10-18 — D23ter · Photos en fond, texte jamais posé sur une zone claire
+**Décision** : trois usages, et trois seulement — bandeau d'accueil pleine largeur sous
+dégradé marine, texture de page voilée d'ivoire à 93-96 %, bandeaux photographiques en tête
+de carte **sans texte par-dessus**. Tout le texte courant reste sur un fond plein.
+**Pourquoi** : une photo derrière du texte est le moyen le plus simple de perdre la lisibilité,
+et le contraste varie avec le recadrage, donc avec la taille de l'écran.
+**Vérification** : le texte blanc du bandeau a été mesuré **sur les pixels réels** de la photo,
+sous le dégradé, par tranches de hauteur. Pire cas **4,64:1** — AA tenu même pour du texte
+courant, et non seulement pour les grands titres. À refaire si la photo d'accueil change.
+
+## 2026-10-18 — D23quater · Les originaux photo restent hors du dépôt
+**Décision** : `photo/` est dans `.gitignore`. Le dépôt ne contient que les versions web
+d'`assets/img/` : recadrées, redimensionnées, converties en JPEG, métadonnées EXIF supprimées
+au ré-encodage. 13 Mo d'originaux deviennent 620 Ko.
+**Pourquoi** : le dépôt est public et l'historique git est définitif. Publier des originaux en
+pleine définition, avec leurs données EXIF (appareil, parfois coordonnées GPS), n'apporte rien
+et ne se rattrape pas.
+
 ## 2026-10-18 — D23 · Aucune police externe par défaut
 **Décision** : les titres utilisent une pile serif système (`Iowan Old Style, Palatino,
 Georgia, Times New Roman, serif`), le texte une pile sans-serif système. Aucun appel à
@@ -198,6 +227,8 @@ plateforme, ce qui convient à une identité volontairement neutre.
 `style.css`. À rouvrir quand les mariés choisiront leur identité visuelle (§9).
 
 ## 2026-10-18 — D24 · Palette claire assumée, pas de thème sombre
+*(La palette a été remplacée par celle des photos — voir D23bis. La décision de n'avoir
+qu'un seul thème, clair, reste valable.)*
 **Décision** : une seule palette, claire, appliquée explicitement sur `body`.
 **Pourquoi** : la page est un faire-part, pas une application ; le rendu doit être le même
 pour tout le monde, y compris à l'impression. Un thème sombre doublerait la surface à

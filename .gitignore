@@ -1,5 +1,10 @@
 # Données réelles d'invités : jamais dans un dépôt public (C1)
 data/
+
+# Photos originales en pleine définition (13 Mo) : elles restent sur le poste de
+# Harry. Le dépôt ne publie que les versions web d'assets/img/, recadrées,
+# compressées et débarrassées de leurs métadonnées EXIF.
+photo/
 *.xlsx
 *.csv
 !sheet-templates/*.csv
