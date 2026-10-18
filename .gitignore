@@ -1,0 +1,22 @@
+# Données réelles d'invités : jamais dans un dépôt public (C1)
+data/
+*.xlsx
+*.csv
+!sheet-templates/*.csv
+
+# Secrets / configuration locale
+.env
+.env.*
+*.key
+clasp.json
+.clasprc.json
+
+# Système / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Divers
+node_modules/
+*.log
