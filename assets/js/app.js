@@ -12,7 +12,35 @@
  */
 
 import { call, session } from './api.js';
-import { CONTACT_MARIES } from './config.js';
+
+/**
+ * Adresse de contact, renseignée par `ping` au chargement.
+ *
+ * Elle vit dans l'onglet `Config` du classeur, PAS dans ce dépôt : le dépôt est
+ * public, et une adresse en clair y serait moissonnée en quelques jours. Tant que
+ * `ping` n'a pas répondu, elle est vide et les phrases qui la citent s'en passent.
+ */
+let contactMaries = '';
+
+/** « , ou écrivez-nous à x@y » — chaîne vide tant que l'adresse est inconnue. */
+function ecrireNous(prefixe = ', ou écrivez-nous à ') {
+  return contactMaries ? `${prefixe}${contactMaries}` : '';
+}
+
+/**
+ * Enregistre l'adresse reçue du serveur et la rend cliquable dans le pied de page.
+ * Le pied disait « Écrivez-nous. » sans donner d'adresse : c'est pourtant le premier
+ * endroit où un invité en difficulté va la chercher.
+ */
+function appliquerContact(adresse) {
+  contactMaries = String(adresse || '').trim();
+  const pied = document.getElementById('contact-pied');
+  if (!pied || !contactMaries) return;
+  vider(pied);
+  pied.appendChild(document.createTextNode('Une question\u00a0? Écrivez-nous à '));
+  pied.appendChild(creer('a', { texte: contactMaries, attrs: { href: `mailto:${contactMaries}` } }));
+  pied.appendChild(document.createTextNode('.'));
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    Textes
@@ -21,16 +49,21 @@ import { CONTACT_MARIES } from './config.js';
    ══════════════════════════════════════════════════════════════════════════ */
 
 const MESSAGES_ERREUR = {
-  EMAIL_INCONNU: `Cette adresse n'est pas sur notre liste. Utilisez celle où vous avez reçu le faire-part, ou écrivez-nous à ${CONTACT_MARIES}.`,
-  CODE_INVALIDE: 'Code incorrect, vérifiez et réessayez.',
-  CODE_EXPIRE: 'Ce code a expiré, demandez-en un nouveau.',
-  TROP_DE_TENTATIVES: `Trop de tentatives. Réessayez dans une heure ou écrivez-nous à ${CONTACT_MARIES}.`,
-  SESSION_EXPIREE: 'Votre session a expiré, reconnectez-vous.',
-  DATE_LIMITE_DEPASSEE: 'Les réponses sont closes. Contactez-nous directement.',
-  DONNEES_INVALIDES: 'Certaines informations sont incomplètes ou incorrectes.',
-  SERVICE_INDISPONIBLE: `Le service est très sollicité aujourd'hui, réessayez demain ou écrivez-nous à ${CONTACT_MARIES}.`,
-  ERREUR_SERVEUR: 'Petit souci technique, réessayez dans un instant.',
-  RESEAU: 'Petit souci technique, réessayez dans un instant.',
+  EMAIL_INCONNU: () => `Cette adresse n'est pas sur notre liste. Utilisez celle où vous avez reçu le faire-part${ecrireNous()}.`,
+  CODE_INVALIDE: () => 'Code incorrect, vérifiez et réessayez.',
+  CODE_EXPIRE: () => 'Ce code a expiré, demandez-en un nouveau.',
+  // Deux situations partagent ce code côté serveur, et leurs remèdes sont opposés :
+  // « 5 demandes de code en une heure » (il faut attendre) et « 5 essais épuisés sur
+  // ce code » (il suffit d'en demander un nouveau). Le second se reconnaît à l'écran
+  // sur lequel on se trouve : voir TROP_DE_TENTATIVES_CODE.
+  TROP_DE_TENTATIVES: () => `Trop de tentatives. Réessayez dans une heure${ecrireNous(' ou écrivez-nous à ')}.`,
+  TROP_DE_TENTATIVES_CODE: () => 'Trop d\'essais sur ce code. Demandez-en un nouveau ci-dessous.',
+  SESSION_EXPIREE: () => 'Votre session a expiré, reconnectez-vous.',
+  DATE_LIMITE_DEPASSEE: () => 'Les réponses sont closes. Contactez-nous directement.',
+  DONNEES_INVALIDES: () => 'Certaines informations sont incomplètes ou incorrectes.',
+  SERVICE_INDISPONIBLE: () => `Le service est très sollicité aujourd'hui, réessayez demain${ecrireNous()}.`,
+  ERREUR_SERVEUR: () => 'Petit souci technique, réessayez dans un instant.',
+  RESEAU: () => 'Petit souci technique, réessayez dans un instant.',
 };
 
 const REGIMES = [
@@ -73,7 +106,7 @@ function vider(n) { while (n.firstChild) n.removeChild(n.firstChild); }
 const ECRANS = ['accueil', 'email', 'code', 'formulaire', 'merci'];
 let ecranCourant = 'accueil';
 
-function montrer(nom) {
+function montrer(nom, { focus = true } = {}) {
   ecranCourant = nom;
   for (const e of ECRANS) {
     const section = document.getElementById(`ecran-${e}`);
@@ -81,7 +114,10 @@ function montrer(nom) {
   }
   // Le titre du nouvel écran reçoit le focus : les lecteurs d'écran annoncent
   // le changement, et la navigation clavier repart du bon endroit.
-  const titre = document.querySelector(`#ecran-${nom} [data-titre]`);
+  // Au tout premier affichage on ne prend pas le focus : le placer sur le titre
+  // ferait démarrer la tabulation APRÈS le lien « Aller au contenu », qui devient
+  // alors inatteignable au clavier.
+  const titre = focus ? document.querySelector(`#ecran-${nom} [data-titre]`) : null;
   if (titre) titre.focus({ preventScroll: true });
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
@@ -112,7 +148,7 @@ function effacerMessage(idZone) {
 }
 
 function messageErreur(code) {
-  return MESSAGES_ERREUR[code] || MESSAGES_ERREUR.ERREUR_SERVEUR;
+  return (MESSAGES_ERREUR[code] || MESSAGES_ERREUR.ERREUR_SERVEUR)();
 }
 
 /** Marque un champ en erreur et relie le message au champ (aria-describedby). */
@@ -154,6 +190,7 @@ const etat = {
   dateLimite: '',
   reponsesOuvertes: true,
   majLe: '',
+  evenements: [],
 };
 
 function formaterDate(iso) {
@@ -172,7 +209,6 @@ function preparerAccueil() {
   const bouton = $('#btn-repondre');
 
   bouton.addEventListener('click', () => {
-    if (!etat.reponsesOuvertes) return;
     if (session.lire()) chargerFoyer();
     else montrer('email');
   });
@@ -184,6 +220,7 @@ function preparerAccueil() {
   // si la date limite est passée.
   call('ping').then((r) => {
     if (!r.ok) return;
+    appliquerContact(r.contact);
     etat.dateLimite = r.dateLimite || '';
     etat.reponsesOuvertes = r.reponsesOuvertes !== false;
 
@@ -192,11 +229,14 @@ function preparerAccueil() {
       rappel.textContent = `Merci de nous répondre avant le ${formaterDate(etat.dateLimite)}.`;
     }
     if (!etat.reponsesOuvertes) {
-      bouton.hidden = true;
+      // Le bouton était masqué ici — et c'est la seule porte d'entrée. L'invitée qui
+      // voulait relire l'allergie déclarée pour sa fille n'avait plus aucun moyen d'y
+      // accéder, alors que le formulaire en lecture seule existe et fonctionne.
+      bouton.textContent = session.lire() ? 'Consulter ma réponse' : 'Consulter notre réponse';
       if (rappel) rappel.textContent = '';
       afficherMessage('msg-accueil',
         `Les réponses sont closes${etat.dateLimite ? ' depuis le ' + formaterDate(etat.dateLimite) : ''}. ` +
-        `Pour toute modification, écrivez-nous à ${CONTACT_MARIES}.`, 'info');
+        `Pour toute modification${ecrireNous(', écrivez-nous à ')}.`, 'info');
     }
   });
 }
@@ -267,7 +307,11 @@ function preparerCode() {
     liberer(bouton);
 
     if (!r.ok) {
-      afficherMessage('msg-code', messageErreur(r.error));
+      // Ici, « trop de tentatives » veut dire « les 5 essais sur CE code sont
+      // épuisés » : il suffit d'en demander un nouveau. Le message générique
+      // conseillait d'attendre une heure, et faisait abandonner.
+      afficherMessage('msg-code', messageErreur(
+        r.error === 'TROP_DE_TENTATIVES' ? 'TROP_DE_TENTATIVES_CODE' : r.error));
       if (r.error === 'CODE_INVALIDE') marquerChamp(champ, 'err-code', 'Ce code ne correspond pas');
       if (r.error === 'CODE_EXPIRE' || r.error === 'TROP_DE_TENTATIVES') champ.value = '';
       return;
@@ -301,6 +345,10 @@ function appliquerEtat(donnees) {
   etat.dateLimite = donnees.dateLimite || etat.dateLimite;
   etat.reponsesOuvertes = donnees.reponsesOuvertes !== false;
   etat.majLe = donnees.majLe || '';
+  // Les libellés des moments viennent du serveur (EVENEMENTS) : ils étaient recopiés
+  // en dur ici, si bien qu'ajouter un quatrième moment ne se voyait nulle part.
+  etat.evenements = Array.isArray(donnees.evenements) ? donnees.evenements : [];
+  if (donnees.contact) appliquerContact(donnees.contact);
   construireFormulaire();
 }
 
@@ -337,14 +385,15 @@ function construireFormulaire() {
   const foyer = etat.foyer;
   $('#titre-foyer').textContent = foyer.nom;
 
-  const evenements = (etat.foyer.invitations && [
-    foyer.invitations.vinHonneur && 'au vin d\'honneur',
-    foyer.invitations.diner && 'au dîner',
-    foyer.invitations.brunch && 'au brunch',
-  ].filter(Boolean)) || [];
+  // Les libellés viennent du serveur sous leur forme de titre (« Vin d'honneur ») ;
+  // la grammaire de la phrase reste ici, donc ajouter un moment côté serveur suffit.
+  const moments = (etat.evenements || [])
+    .map((e) => String(e.libelle || ''))
+    .filter(Boolean)
+    .map((l) => l.charAt(0).toLowerCase() + l.slice(1));
 
-  $('#sous-titre-foyer').textContent = evenements.length
-    ? `Vous êtes conviés ${evenements.join(', ').replace(/,([^,]*)$/, ' et$1')}.`
+  $('#sous-titre-foyer').textContent = moments.length
+    ? `Vous êtes conviés : ${moments.join(', ').replace(/,([^,]*)$/, ' et$1')}.`
     : '';
 
   const rappel = $('#rappel-limite-formulaire');
@@ -362,8 +411,9 @@ function construireFormulaire() {
   blocAcc.hidden = placesLibres < 1;
   if (placesLibres >= 1) {
     const dejaLa = etat.reponsesExistantes.find((r) => r.estAccompagnant);
-    $('#texte-places-libres').textContent =
-      placesLibres === 1 ? '(il vous reste 1 place)' : `(il vous reste ${placesLibres} places)`;
+    // Le formulaire n'offre qu'UNE case accompagnant : annoncer « il vous reste 2
+    // places » promettait ce que l'interface ne sait pas tenir.
+    $('#texte-places-libres').textContent = '(une place reste disponible)';
     const caseAcc = $('#case-accompagnant');
     caseAcc.checked = Boolean(dejaLa);
     $('#acc-nom').value = dejaLa ? dejaLa.personne : '';
@@ -406,7 +456,10 @@ function blocPersonne(personne, index) {
     details.appendChild(creer('div', { classe: 'ligne-deux' }, [
       champTexte(`${base}-age`, 'Âge', existante && existante.age != null ? existante.age : '',
                  { type: 'number', min: '0', max: '17', inputmode: 'numeric' }),
-      champRegime(`${base}-regime`, existante ? existante.regime : 'menu_enfant'),
+      // `existante.regime` est vide quand l'enfant avait été déclaré absent : on
+      // retombe alors sur menu_enfant, et non sur « aucun régime », sinon le traiteur
+      // comptait un menu adulte pour un enfant de quatre ans.
+      champRegime(`${base}-regime`, (existante && existante.regime) || 'menu_enfant'),
     ]));
   } else {
     details.appendChild(champRegime(`${base}-regime`, existante ? existante.regime : 'aucun'));
@@ -416,8 +469,14 @@ function blocPersonne(personne, index) {
     existante ? existante.allergies || '' : '',
     { maxlength: '200' }, 'Laissez vide si vous n\'en avez pas.'));
 
+  // Message d'erreur propre à cette personne. Sans lui, « Indiquez si Tom sera
+  // présent·e » s'affichait en bas de page pendant que le focus remontait vers Tom :
+  // les deux n'étaient jamais à l'écran en même temps.
+  const erreur = creer('p', { classe: 'erreur-champ', attrs: { id: `${base}-err`, role: 'status' } });
+  choix.setAttribute('aria-describedby', `${base}-err`);
+
   const bloc = creer('div', { classe: 'personne', attrs: { 'data-personne': personne.nom } },
-                     [entete, choix, details]);
+                     [entete, choix, erreur, details]);
 
   // Les détails n'apparaissent que si la personne vient. Fait en JavaScript et
   // non avec le sélecteur CSS :has(), pour fonctionner aussi sur les navigateurs
@@ -484,7 +543,7 @@ function lireFormulaire() {
     const non = $(`#${base}-non`);
 
     if (!oui.checked && !non.checked) {
-      if (!erreur) erreur = { champ: oui, texte: `Indiquez si ${p.nom} sera présent·e.` };
+      if (!erreur) erreur = { champ: oui, texte: `Indiquez si ${p.nom} sera présent·e.`, zone: `${base}-err` };
       return;
     }
 
@@ -497,7 +556,7 @@ function lireFormulaire() {
         const champAge = $(`#${base}-age`);
         const age = champAge.value.trim();
         if (!/^\d{1,2}$/.test(age) || Number(age) > 17) {
-          if (!erreur) erreur = { champ: champAge, texte: `Indiquez l'âge de ${p.nom} (0 à 17 ans).` };
+          if (!erreur) erreur = { champ: champAge, texte: `Indiquez l'âge de ${p.nom} (0 à 17 ans).`, zone: `${base}-err` };
           return;
         }
         entree.age = Number(age);
@@ -522,9 +581,19 @@ function lireFormulaire() {
   }
 
   if (erreur) {
+    // On efface les marques de la tentative précédente avant de poser la nouvelle.
+    for (const marque of document.querySelectorAll('#liste-personnes [aria-invalid="true"]')) {
+      marque.setAttribute('aria-invalid', 'false');
+    }
+    for (const zone of document.querySelectorAll('#liste-personnes .erreur-champ')) {
+      zone.textContent = '';
+    }
     afficherMessage('msg-formulaire', erreur.texte);
+    const proche = erreur.zone && document.getElementById(erreur.zone);
+    if (proche) proche.textContent = erreur.texte;
     erreur.champ.setAttribute('aria-invalid', 'true');
-    erreur.champ.focus();
+    erreur.champ.focus({ preventScroll: true });
+    (proche || erreur.champ).scrollIntoView({ block: 'center' });
     return null;
   }
 
@@ -534,7 +603,7 @@ function lireFormulaire() {
   if (presents > etat.foyer.placesMax) {
     afficherMessage('msg-formulaire',
       `Votre invitation prévoit ${etat.foyer.placesMax} place${etat.foyer.placesMax > 1 ? 's' : ''}. ` +
-      `Écrivez-nous à ${CONTACT_MARIES} si vous souhaitez venir plus nombreux.`);
+      `Prévenez-nous${ecrireNous(' à ')} si vous souhaitez venir plus nombreux.`);
     return null;
   }
 
@@ -598,7 +667,7 @@ function recapDepuisEtat() {
 }
 
 function remplirRecapitulatif(recap) {
-  $('#titre-merci').textContent = etat.reponsesOuvertes ? 'Votre réponse' : 'Votre réponse';
+  $('#titre-merci').textContent = 'Votre réponse';
   $('#bandeau-merci').hidden = !etat.reponsesOuvertes;
   $('#msg-merci-clos').hidden = etat.reponsesOuvertes;
 
@@ -633,7 +702,7 @@ function remplirRecapitulatif(recap) {
   note.textContent = etat.reponsesOuvertes
     ? `${quand ? `Réponse enregistrée le ${quand}. ` : ''}` +
       `${etat.dateLimite ? `Vous pouvez la modifier jusqu'au ${formaterDate(etat.dateLimite)}.` : ''}`
-    : `Pour toute modification, écrivez-nous à ${CONTACT_MARIES}.`;
+    : `Pour toute modification${ecrireNous(', écrivez-nous à ')}.`;
 
   $('#btn-modifier').hidden = !etat.reponsesOuvertes;
 }
@@ -663,4 +732,4 @@ preparerEmail();
 preparerCode();
 preparerFormulaire();
 preparerMerci();
-montrer('accueil');
+montrer('accueil', { focus: false });

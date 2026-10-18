@@ -97,7 +97,7 @@ function reponsesOuvertes_(config) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(limite)) {
     // On échoue ouvert plutôt que de bloquer tout le monde sur une faute de frappe,
     // mais l'incident est tracé : sans cela, il passerait totalement inaperçu.
-    journaliser_('', 'config', 'alerte', 'DATE_LIMITE illisible : « ' + limite + ' »');
+    alerterUneFoisParJour_('DATE_LIMITE illisible : « ' + limite + ' »');
     return true;
   }
   return jourCourant_() <= limite;
@@ -114,7 +114,11 @@ function actionPing_() {
   return {
     version: VERSION,
     dateLimite: String(config.DATE_LIMITE || ''),
-    reponsesOuvertes: reponsesOuvertes_(config)
+    reponsesOuvertes: reponsesOuvertes_(config),
+    // L'adresse de contact est servie ici plutôt qu'écrite dans `config.js` : le dépôt
+    // du front est public (C1), une adresse en clair y serait moissonnée. Elle reste
+    // modifiable par les mariés depuis l'onglet Config, sans toucher au code.
+    contact: String(config.CONTACT_MARIES || '')
   };
 }
 
@@ -134,18 +138,26 @@ function actionPing_() {
  */
 function actionRequestCode_(requete) {
   var email = normaliserEmail_(requete.email);
-
-  // Champ caché : un humain ne le voit pas, un robot le remplit. On fait semblant
-  // d'accepter pour ne rien lui apprendre, et on n'envoie rien.
-  if (String(requete.website || '').trim() !== '') {
-    journaliser_(email, 'requestCode', 'ok', 'honeypot - aucun envoi');
-    return {};
-  }
+  var piege = String(requete.website || '').trim() !== '';
 
   // Rejet sur la forme : rien n'est journalisé, pas même une ligne. Chaque requête
   // malformée écrivait sinon une ligne dans le classeur, sans aucune limite (A6).
+  // Ce contrôle passe AVANT le piège à robots : la branche honeypot journalisait,
+  // elle aussi, une ligne par requête et sans plafond (finition de A6).
   if (!email || !emailPlausible_(email)) {
     throw erreurApi_('EMAIL_INCONNU');
+  }
+
+  // Champ caché : un humain ne le voit pas, un robot le remplit. On fait semblant
+  // d'accepter pour ne rien lui apprendre, et on n'envoie rien. La trace passe par
+  // le même plafond horaire global que les sondages : un robot acharné ne peut pas
+  // remplir le Journal, et au-delà du plafond on reste silencieux (réponse inchangée).
+  if (piege) {
+    if (sondageInconnuAutorise_()) {
+      compterSondageInconnu_();
+      journaliser_(email, 'requestCode', 'ok', 'honeypot - aucun envoi');
+    }
+    return {};
   }
 
   // La recherche du foyer vient AVANT le plafond de sondage. L'inverse était tentant
@@ -229,8 +241,10 @@ function actionGetRsvp_(requete) {
 
 /** logout — invalide le token côté serveur. */
 function actionLogout_(requete) {
-  fermerSession_(requete.token);
-  journaliser_('', 'logout', 'ok', '');
+  // Journaliser SEULEMENT si une session a réellement été fermée. Sinon
+  // `curl -d '{"action":"logout"}'` en boucle écrivait une ligne de Journal par
+  // requête — sans token, sans code, sans aucun plafond (finition de A6).
+  if (fermerSession_(requete.token)) journaliser_('', 'logout', 'ok', '');
   return {};
 }
 
@@ -262,6 +276,7 @@ function etatFoyer_(foyerId) {
     majLe: existant.majLe,
     dateLimite: String(config.DATE_LIMITE || ''),
     reponsesOuvertes: reponsesOuvertes_(config),
+    contact: String(config.CONTACT_MARIES || ''),
     evenements: evenements
   };
 }
@@ -386,11 +401,6 @@ function actionSubmitRsvp_(requete) {
   journaliser_('', 'submitRsvp', 'ok',
                foyerId + ' : ' + ecriture.lignes + ' ligne(s), ' + presents + ' présent(s)');
 
-  // L'apostrophe de neutralisation protège le Sheet, elle n'a rien à faire sous les
-  // yeux de l'invité : il verrait « '=TEST() » au lieu de ce qu'il a écrit.
-  var sansApostrophe = function (v) {
-    return String(v || '').charAt(0) === "'" ? String(v).slice(1) : String(v || '');
-  };
 
   return {
     recap: {
@@ -399,16 +409,16 @@ function actionSubmitRsvp_(requete) {
       absents: retenues.length - presents,
       personnes: retenues.map(function (p) {
         return {
-          personne: sansApostrophe(p.personne),
+          personne: sansApostrophe_(p.personne),
           type: p.type,
           estAccompagnant: p.estAccompagnant,
           presence: p.presence,
           age: p.age,
           regime: p.regime,
-          allergies: sansApostrophe(p.allergies)
+          allergies: sansApostrophe_(p.allergies)
         };
       }),
-      commentaire: sansApostrophe(commentaire),
+      commentaire: sansApostrophe_(commentaire),
       majLe: ecriture.horodatage
     }
   };

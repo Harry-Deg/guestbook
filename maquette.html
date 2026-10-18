@@ -7,6 +7,15 @@
 <title>Maquette — site RSVP du mariage</title>
 <link rel="stylesheet" href="assets/css/style.css">
 <style>
+  /* Bandeau d'avertissement : si la maquette est publiée avec le site, un invité
+     peut tomber dessus et croire qu'il répond vraiment (R26). */
+  .maquette-avertissement {
+    position: sticky; top: 0; z-index: 10;
+    margin: 0 0 1rem; padding: .7rem 1rem;
+    background: #8c2b22; color: #fff; text-align: center;
+    font: 600 .95rem/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .maquette-avertissement a { color: #fff; }
   /* Habillage propre à la maquette : rien de tout cela n'ira dans le site. */
   .maquette-intro {
     max-width: 34rem; margin: 1.5rem auto; padding: 1rem 1.25rem;
@@ -32,6 +41,12 @@
 </style>
 </head>
 <body>
+
+<p class="maquette-avertissement">
+  Maquette de travail — ceci n'est <strong>pas</strong> le site.
+  Les noms et les dates sont inventés, rien n'est enregistré.
+  <a href="index.html">Aller au vrai site</a>
+</p>
 
 <div class="maquette-intro">
   <h1>Maquette — à valider avant câblage</h1>

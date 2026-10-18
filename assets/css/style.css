@@ -408,6 +408,8 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 .message p { margin: 0; }
 .message p + p { margin-top: .4rem; }
 
+.erreur-champ:empty { display: none; }
+
 .erreur-champ {
   display: block;
   margin-top: .35rem;
@@ -503,6 +505,23 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 .choix-presence input:focus-visible + span {
   outline: 3px solid var(--couleur-principale);
+  outline-offset: 2px;
+}
+
+/* Le bouton radio est en opacity: 0 — la règle générique
+   `input[aria-invalid="true"]` s'appliquait donc à un élément invisible, et une
+   présence oubliée n'était signalée nulle part à l'écran. C'est le <span> visible
+   qui doit porter la marque. */
+.choix-presence input[aria-invalid="true"] + span {
+  border-color: var(--couleur-erreur);
+  border-width: 2px;
+  padding: calc(.5rem - 1px);
+}
+
+/* Le focus programmatique après un appui tactile ne déclenche pas :focus-visible :
+   sans cette règle, le champ fautif ne se distinguait pas sur mobile. */
+.choix-presence input[aria-invalid="true"]:focus + span {
+  outline: 3px solid var(--couleur-erreur);
   outline-offset: 2px;
 }
 

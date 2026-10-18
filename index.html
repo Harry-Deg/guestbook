@@ -56,7 +56,7 @@
       </div>
 
       <div class="carte">
-        <img class="photo-bande" src="assets/img/table.jpg" alt="" width="1000" height="814">
+        <img class="photo-bande" src="assets/img/table.jpg" alt="" width="1000" height="814" loading="lazy">
         <h2>Le programme</h2>
         <ul class="programme">
           <li>
@@ -91,7 +91,7 @@
       </div>
 
       <div class="carte">
-        <img class="photo-bande" src="assets/img/couple.jpg" alt="" width="793" height="1000">
+        <img class="photo-bande" src="assets/img/couple.jpg" alt="" width="793" height="1000" loading="lazy">
         <h2>Venir et dormir</h2>
         <p><strong>En voiture</strong> — à compléter : itinéraire et stationnement.</p>
         <p><strong>En train</strong> — à compléter : gare la plus proche, navette éventuelle.</p>
@@ -228,7 +228,7 @@
     <!-- ═══ Écran 5 — merci ══════════════════════════════════════════════ -->
     <section id="ecran-merci" hidden>
       <div class="carte">
-        <img class="photo-bande" src="assets/img/detail.jpg" alt="" width="764" height="800">
+        <img class="photo-bande" src="assets/img/detail.jpg" alt="" width="764" height="800" loading="lazy">
 
         <div class="message message--succes" id="bandeau-merci" role="status">
           <p><strong>C'est enregistré, merci&nbsp;!</strong></p>
@@ -251,7 +251,9 @@
   </main>
 
   <footer class="pied">
-    <p>Une question&nbsp;? Écrivez-nous.</p>
+    <!-- L'adresse est écrite ici par app.js, depuis Config!CONTACT_MARIES :
+         elle n'est pas dans le dépôt, qui est public. -->
+    <p id="contact-pied">Une question&nbsp;? Écrivez-nous.</p>
   </footer>
 
 </div>

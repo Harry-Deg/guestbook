@@ -280,6 +280,18 @@ heure et par adresse, et que ce plafond **survit au vidage du cache**.
 Si ce test s'arrête sur « plafond mail atteint avant le plafond horaire », c'est que votre
 quota Gmail du jour est déjà entamé : réessayez demain, ce n'est pas un défaut.
 
+**6. `testerCorrectionsP4` — 10 contrôles · aucun mail**
+
+Ajoutée après la revue croisée de Phase 4. Vérifie que les chemins corrigés le restent :
+`logout` et le piège à robots n'écrivent plus de ligne de `Journal` sans plafond, une
+`DATE_LIMITE` au format français ne produit qu'**une** alerte par jour au lieu d'une par
+visiteur, l'apostrophe de protection du Sheet ne remonte pas sous les yeux de l'invité,
+et deux écritures Unicode d'un même prénom accentué donnent bien la même clé.
+
+> Ce test modifie temporairement `DATE_LIMITE` dans `Config` et la remet en place
+> ensuite, y compris s'il échoue. Si vous l'interrompez en cours d'exécution, vérifiez
+> la valeur de `DATE_LIMITE` avant de continuer.
+
 ---
 
 **Si un test échoue, ne déployez pas.** Copiez-moi le rapport complet du journal
@@ -303,7 +315,7 @@ votre place.
    > **« Tout le monde » inquiète souvent, à tort.** Cela signifie que n'importe qui peut
    > *appeler* l'URL — pas qu'il peut lire quoi que ce soit. Le script ne répond rien
    > d'utile sans un code reçu par mail, puis un token valide. C'est précisément ce que
-   > `testerIsolationFoyer` et les 161 contrôles automatisés vérifient.
+   > `testerIsolationFoyer` et les 182 contrôles automatisés vérifient.
    >
    > L'alternative, « Toute personne disposant d'un compte Google », obligerait chaque
    > invité à se connecter à Google : inutilisable ici.
@@ -371,7 +383,7 @@ curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
 ```
 
 ```json
-{"version":"0.2.0","dateLimite":"2027-04-30","reponsesOuvertes":true,"ok":true}
+{"version":"0.2.0","dateLimite":"2027-04-30","reponsesOuvertes":true,"contact":"…","ok":true}
 ```
 
 > Le `-L` est **indispensable** : Apps Script répond par une redirection 302 vers
@@ -379,7 +391,8 @@ curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
 > à tort que le déploiement est cassé. Le navigateur, lui, suit la redirection seul.
 
 **Dernière étape** : collez l'URL `/exec` dans [`assets/js/config.js`](../assets/js/config.js),
-à la place de `REMPLACER_PAR_VOTRE_ID`. C'est la seule ligne du dépôt à modifier.
+comme valeur de `API_URL`. C'est la **seule** ligne du dépôt à modifier : tout le reste de
+la configuration (nom des mariés, dates, adresse de contact) vit dans l'onglet `Config`.
 
 ### 2.6 À retenir pour la suite
 
@@ -395,7 +408,8 @@ curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
 
 - [ ] Les 5 fichiers et le manifeste sont dans l'éditeur, sans erreur de syntaxe.
 - [ ] `EMAIL_TEST` est défini et l'adresse figure dans `Foyers`.
-- [ ] Les cinq fonctions de test passent avec `0 échec(s)`.
+- [ ] Les **six** fonctions de test passent avec `0 échec(s)` — dont `testerCorrectionsP4`,
+      ajoutée après la revue croisée.
 - [ ] Un mail de code a été reçu, lu sur mobile, et **n'est pas en spam**.
 - [ ] `ping` répond correctement en `curl` depuis l'extérieur.
 - [ ] `./outils/verifier-deploiement.sh "<URL>"` : 12 contrôles, 0 échec.
@@ -406,4 +420,122 @@ curl -sL -H "Content-Type: text/plain" -d '{"action":"ping"}' "$URL"
 
 ## Phase 5 — Mise en ligne
 
-*(À venir. Activation de GitHub Pages, `Config!URL_SITE`, test de bout en bout.)*
+> Cette phase contient les **seules** actions irréversibles du projet : à partir de
+> l'étape 5.3, le site est public. Les étapes 5.1 et 5.2 sont là pour qu'il n'y ait rien
+> à regretter.
+
+### 5.1 Vérifier que le dépôt ne contient rien de personnel
+
+Le dépôt est public, et son **historique** l'est autant que son état actuel.
+
+```bash
+cd ~/Documents/guestbook
+git log -p | grep -nEi '[a-z0-9._%+-]+@(gmail|outlook|hotmail|yahoo|icloud|free|orange|wanadoo)\.'
+git log --all --name-only --pretty=format: | sort -u | grep -i '^photo/'
+```
+
+Les deux commandes doivent **ne rien afficher**. La première cherche une adresse
+personnelle, la seconde une photo d'origine qui serait entrée par erreur.
+
+Si la première trouve quelque chose, la ligne indiquée est déjà dans l'historique :
+la corriger aujourd'hui ne l'en retire pas. Il faut alors réécrire l'historique
+(`git filter-repo`) **avant** le premier `git push`, ou repartir d'un dépôt neuf.
+Après publication, considérer l'adresse comme divulguée.
+
+### 5.2 Remplir le contenu réel du site
+
+`index.html` contient encore des valeurs d'attente. Tant qu'elles y sont, le site
+n'est pas publiable : un invité lirait « À compléter ».
+
+```bash
+grep -n 'À compléter\|à compléter' index.html
+```
+
+À renseigner :
+
+| Ligne | Quoi |
+|---|---|
+| `bandeau__date` | la vraie date du mariage |
+| Programme × 4 | horaire, lieu et adresse de chaque moment |
+| Venir et dormir | itinéraire, stationnement, gare, hébergements |
+
+Les horaires actuels (15 h / 17 h / 20 h / 11 h) sont eux aussi inventés.
+
+**Puis vérifier la cohérence entre le site et le classeur** — les deux se répètent, et
+rien ne les synchronise automatiquement (D17) :
+
+| `Config` | doit correspondre à |
+|---|---|
+| `NOM_MARIES` | le `<title>` et le bandeau d'`index.html` |
+| `DATE_MARIAGE` | la date affichée dans le bandeau |
+| `DATE_LIMITE` | postérieure à aujourd'hui, antérieure au mariage |
+| `CONTACT_MARIES` | une adresse réellement relevée (elle sera **affichée publiquement**) |
+
+L'adresse de contact n'est plus dans le code : elle est servie par l'API depuis
+`Config`. La changer dans le classeur suffit, sans redéployer quoi que ce soit.
+
+### 5.3 Activer GitHub Pages — 🖐 action de Harry
+
+> **Accord explicite requis.** C'est l'étape qui rend le site visible de tous.
+
+1. `git push` sur `main` — après avoir confirmé 5.1.
+2. Sur GitHub : **Settings → Pages**.
+3. *Source* : **Deploy from a branch**. *Branch* : `main`, dossier `/ (root)`. **Save**.
+4. Attendre 1 à 2 minutes. L'URL s'affiche en haut de la page :
+   `https://<compte>.github.io/<dépôt>/`.
+
+Le fichier `.nojekyll` à la racine est nécessaire : sans lui, GitHub fait passer le
+dépôt par Jekyll, qui transformerait `README.md` et `docs/*.md` en pages HTML publiques.
+
+### 5.4 Reporter l'URL dans le classeur
+
+Dans `Config`, renseigner **`URL_SITE`** avec l'URL obtenue, barre oblique finale comprise.
+
+Ce n'est pas cosmétique : le mail de code contient une ligne « Le site : … » qui
+**disparaît silencieusement** si `URL_SITE` est vide. Les invités recevraient alors un
+code sans savoir où le saisir.
+
+Puis : menu **Mariage → Vérifier les données**. Attendu : `0 erreur`.
+
+### 5.5 Test de bout en bout sur l'URL publique
+
+Sur le **vrai** site, pas en local, console ouverte (`F12`) :
+
+- [ ] La page s'affiche, aucun message rouge, **aucune mention « Content Security Policy »**.
+- [ ] Le pied de page affiche l'adresse de contact et elle est cliquable.
+- [ ] Parcours complet avec `EMAIL_TEST` : code reçu, saisi, formulaire, envoi, récapitulatif.
+- [ ] Rechargement de la page : la réponse est toujours là.
+- [ ] Modification : aucun doublon dans `Reponses`, une version de plus dans `Historique`.
+- [ ] Même parcours depuis un téléphone, en 4G (pas en Wi-Fi : on teste aussi la latence).
+- [ ] Dérouler [`RECETTE.md`](RECETTE.md) §3bis et §4, et cocher les cases.
+
+### 5.6 Avant d'envoyer les faire-part
+
+- [ ] `GUIDE_MARIES.md` a été lu avec Alec et Gloria, et le classeur partagé
+      **nominativement** avec eux (jamais par lien).
+- [ ] Une sauvegarde du classeur a été faite : **Fichier → Télécharger → Microsoft Excel**.
+- [ ] Les envois sont **étalés sur plusieurs jours** : le plafond est de 80 mails par jour
+      (R02). À 150 foyers, un envoi groupé l'épuise dès le premier soir — et les invités
+      concernés reçoivent une erreur, pas un code.
+
+### 5.7 Les 48 premières heures
+
+Surveiller l'onglet `Journal`, en filtrant la colonne `resultat` :
+
+| Ce qu'on y voit | Ce que ça veut dire |
+|---|---|
+| `SERVICE_INDISPONIBLE` répété | plafond de mails atteint, ou classeur trop sollicité |
+| `alerte` | une valeur de `Config` est illisible — relancer *Vérifier les données* |
+| `EMAIL_INCONNU` fréquent | une adresse de `Foyers` est erronée, ou un invité se trompe |
+| `TROP_DE_TENTATIVES` | normal et isolé ; répété sur la même adresse, appeler la personne |
+
+### Checklist de clôture — Phase 5
+
+- [ ] L'historique git ne contient aucune adresse personnelle ni photo d'origine.
+- [ ] Plus aucun « À compléter » dans `index.html`.
+- [ ] `Config` et `index.html` disent la même chose.
+- [ ] GitHub Pages est actif et l'URL répond.
+- [ ] `URL_SITE` est renseignée et le mail contient bien le lien.
+- [ ] Le parcours complet fonctionne sur l'URL publique, depuis un téléphone.
+- [ ] Les mariés ont le classeur et le guide.
+- [ ] Une sauvegarde Excel existe.

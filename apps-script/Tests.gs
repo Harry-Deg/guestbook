@@ -349,6 +349,104 @@ function testerAntiAbus() {
 }
 
 /**
+ * Non-régressions issues de la revue croisée de Phase 4.
+ *
+ * Aucun mail n'est envoyé. Le test touche à DATE_LIMITE dans Config et la remet
+ * en place à la fin, même en cas d'échec.
+ */
+function testerCorrectionsP4() {
+  var t = cadre_();
+  var email = emailDeTest_();
+
+  /* ── Journal : plus un seul chemin non authentifié et sans plafond ───── */
+  var avant = compterLignesJournal_();
+  for (var i = 0; i < 15; i++) actionLogout_({ token: 'jamais-ouvert-' + i });
+  actionLogout_({});
+  t.verifier('16 logout sans session n\'écrivent aucune ligne de Journal',
+             compterLignesJournal_() === avant,
+             (compterLignesJournal_() - avant) + ' ligne(s) écrite(s)');
+
+  avant = compterLignesJournal_();
+  for (var j = 0; j < 10; j++) {
+    try { actionRequestCode_({ email: 'pas-une-adresse', website: 'robot' }); } catch (e) {}
+  }
+  t.verifier('10 adresses mal formées avec le piège rempli n\'écrivent rien',
+             compterLignesJournal_() === avant,
+             (compterLignesJournal_() - avant) + ' ligne(s) écrite(s)');
+
+  /* ── DATE_LIMITE illisible : une alerte par jour, pas une par visiteur ─ */
+  var feuille = classeur_().getSheetByName('Config');
+  var ligne = trouverLigneConfig_(feuille, 'DATE_LIMITE');
+  var valeurInitiale = ligne ? feuille.getRange(ligne, 2).getValue() : null;
+  var cleAlerte = PREFIXE_ALERTE +
+    hacher_('DATE_LIMITE illisible : « 30/04/2027 »').slice(0, 16);
+
+  try {
+    PropertiesService.getScriptProperties().deleteProperty(cleAlerte);
+    if (ligne) {
+      feuille.getRange(ligne, 2).setValue('30/04/2027');  // le réflexe français
+      SpreadsheetApp.flush();
+      avant = compterLignesJournal_();
+      for (var k = 0; k < 12; k++) actionPing_();
+      var ecrites = compterLignesJournal_() - avant;
+      t.verifier('12 chargements de page n\'écrivent qu\'une seule alerte',
+                 ecrites === 1, ecrites + ' ligne(s)');
+      t.verifier('on échoue ouvert : les réponses restent possibles',
+                 actionPing_().reponsesOuvertes === true);
+    }
+  } finally {
+    if (ligne) {
+      feuille.getRange(ligne, 2).setValue(valeurInitiale);
+      SpreadsheetApp.flush();
+    }
+    PropertiesService.getScriptProperties().deleteProperty(cleAlerte);
+  }
+
+  /* ── L'adresse de contact est servie par l'API, plus écrite dans le dépôt ── */
+  var pong = actionPing_();
+  t.verifier('ping sert CONTACT_MARIES depuis l\'onglet Config',
+             typeof pong.contact === 'string' && pong.contact.indexOf('@') > 0,
+             'reçu « ' + pong.contact + ' » — renseignez CONTACT_MARIES dans Config');
+
+  /* ── L'apostrophe de neutralisation ne remonte pas vers l'invité ─────── */
+  t.verifier('sansApostrophe_ retire la protection du Sheet',
+             sansApostrophe_("'-sans lactose") === '-sans lactose');
+  t.verifier('sansApostrophe_ ne touche pas un texte normal',
+             sansApostrophe_('sans lactose') === 'sans lactose');
+  t.verifier('neutraliserFormule_ protège toujours le Sheet',
+             neutraliserFormule_('=TEST()').charAt(0) === "'");
+
+  /* ── Doublons de noms : même clé que celle utilisée à l'exécution ────── */
+  var nfc = 'Jos\u00e9 Bernard';          // é précomposé (saisie clavier)
+  var nfd = 'Jose\u0301 Bernard';         // e + accent combinant (copier-coller macOS)
+  t.verifier('deux écritures Unicode du même nom donnent la même clé',
+             cleNom_(nfc) === cleNom_(nfd),
+             cleNom_(nfc) + ' vs ' + cleNom_(nfd));
+  t.verifier('toLowerCase() ne les aurait PAS vues identiques',
+             nfc.toLowerCase() !== nfd.toLowerCase());
+
+  return t.rapport('Corrections de la revue P4');
+}
+
+/** Nombre de lignes de données du Journal (en-tête exclu). */
+function compterLignesJournal_() {
+  var feuille = classeur_().getSheetByName('Journal');
+  return feuille ? Math.max(feuille.getLastRow() - 1, 0) : 0;
+}
+
+/** Numéro de ligne d'une clé dans Config, ou null. */
+function trouverLigneConfig_(feuille, cle) {
+  if (!feuille) return null;
+  var derniere = feuille.getLastRow();
+  if (derniere < 2) return null;
+  var cles = feuille.getRange(2, 1, derniere - 1, 1).getValues();
+  for (var i = 0; i < cles.length; i++) {
+    if (String(cles[i][0]).trim() === cle) return i + 2;
+  }
+  return null;
+}
+
+/**
  * Remet à zéro le compteur horaire de EMAIL_TEST, pour pouvoir enchaîner les tests
  * sans attendre une heure.
  */

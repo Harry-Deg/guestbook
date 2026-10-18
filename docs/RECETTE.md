@@ -23,6 +23,7 @@ Statuts : ✅ passé · ❌ échoué · ⏳ pas encore exécutable · 🖐 deman
 | `testerParcoursComplet()` | **envoie un mail**, écrit dans `Reponses` | sur un foyer de test |
 | `testerIsolationFoyer()` | écrit dans `Reponses` | sur un foyer de test |
 | `testerAntiAbus()` | **envoie jusqu'à 5 mails**, bloque l'adresse 1 h | sur un foyer de test |
+| `testerCorrectionsP4()` | aucun envoi ; modifie puis restaure `Config!DATE_LIMITE` | après chaque modification du code |
 | `reinitialiserCompteurDeTest()` | débloque l'adresse de test | pour enchaîner les tests |
 
 ---
@@ -39,7 +40,10 @@ Exécutés hors Google sur un simulateur, avec deux jeux de données.
 | Jeu sain | aucune anomalie | ✅ 0 / 0 |
 | CSV modèles du dépôt | aucune anomalie | ✅ 0 / 0 |
 
-### 2.2 Backend (Phase 2) — **161 contrôles, 161 passés**
+### 2.2 Backend — **182 contrôles, 182 passés**
+
+123 contrôles de base, 39 régressions de la revue de Phase 2, 20 de la revue croisée de
+Phase 4.
 
 Exécutés hors Google sur un simulateur reproduisant `SpreadsheetApp`, `CacheService`,
 `PropertiesService`, `MailApp`, `LockService`, `ContentService` et `Utilities`, avec une
@@ -61,7 +65,7 @@ horloge contrôlable pour tester les expirations.
 | Date limite dépassée | 4 | ✅ |
 | Journal sans donnée sensible (code, token, allergies, régime, commentaire) | 7 | ✅ |
 | Robustesse face à un classeur cassé (onglet supprimé) | 7 | ✅ |
-| **Régressions de la revue indépendante** (voir `SECURITE.md` §7) | **36** | ✅ |
+| **Régressions de la revue indépendante** (voir `SECURITE.md` §7) | **39** | ✅ |
 | └ B1 · injection de formule par le champ `email` du `Journal` | 7 | ✅ |
 | └ B3 · aucune clé persistante par adresse inconnue, invité servi malgré le sondage | 5 | ✅ |
 | └ B4 · `Historique` au-delà de la taille initiale de la feuille | 3 | ✅ |
@@ -71,8 +75,22 @@ horloge contrôlable pour tester les expirations.
 | └ A5 · ligne vidée à la main dans `Reponses` | 4 | ✅ |
 | └ A7 · `EXPEDITEUR_ADRESSE` sans la portée `gmail.send` | 3 | ✅ |
 | └ B2 / A4 · les sections critiques prennent bien le verrou, sans imbrication | 4 | ✅ |
+| **Régressions de la revue croisée P4** (voir `SECURITE.md` §8) | **20** | ✅ |
+| └ A-1 · plus aucun chemin non authentifié et sans plafond n'écrit dans `Journal` | 6 | ✅ |
+| └ A-1 · `DATE_LIMITE` illisible : une alerte par jour, pas une par visiteur | 3 | ✅ |
+| └ A-2 · l'apostrophe de neutralisation ne remonte pas vers l'invité | 4 | ✅ |
+| └ A-7 · `Reponses` est écrit **avant** l'effacement du surplus | 3 | ✅ |
+| └ DATA-4 · doublon de nom détecté avec la clé réellement utilisée (NFC/NFD) | 1 | ✅ |
+| └ B-2 · l'adresse de contact vient du classeur, et plus du dépôt | 3 | ✅ |
 
-### 2.3 Front (Phase 3) — **64 contrôles, 64 passés**
+### 2.3 Front (Phase 3) — **66 contrôles, 66 passés**
+
+Deux contrôles ajoutés en P4, qui encodaient auparavant un défaut :
+
+| Ce qui est désormais vérifié | Pourquoi |
+|---|---|
+| Après la date limite, le bouton **reste** accessible et dit « Consulter » | il était masqué, rendant les écrans de consultation inatteignables (B-4) |
+| Les libellés des moments viennent du **serveur**, pas d'une liste en dur | ajouter un moment ne se voyait nulle part (A-3) |
 
 Le vrai `app.js` est exécuté sur un DOM minimal, avec `fetch` branché sur le **vrai
 backend** tournant sur le simulateur : ce que le front envoie est réellement traité par
@@ -112,6 +130,8 @@ Après le premier déploiement.
 - [x] `./outils/verifier-deploiement.sh "<URL>"` : **12 contrôles, 12 OK**, sur le
       déploiement réel. `version` = `0.2.0`, `dateLimite` = `2027-04-10` lue dans `Config`,
       `reponsesOuvertes` = `true`.
+- [ ] **À refaire après le redéploiement des corrections P4** : `ping` doit désormais
+      renvoyer aussi un champ `contact`, lu dans `Config!CONTACT_MARIES`.
 - [x] L'URL répond en HTTP 200 **sans compte Google** : le réglage « Tout le monde » est bon.
 - [x] Aucune trace technique ne fuit dans les réponses d'erreur.
 - [ ] Après une modification de code **sans** nouvelle version, `ping` renvoie l'ancienne
@@ -252,5 +272,8 @@ Depuis le même réseau Wi-Fi, l'adresse est `http://<IP-de-votre-Mac>:8000`
 | 2026-10-18 | Backend complet (simulateur) | 122 / 122 | agent |
 | 2026-10-18 | Revue sécurité indépendante | 4 bloquants, 7 à corriger — tous corrigés | relecteur |
 | 2026-10-18 | Backend après corrections (simulateur) | 161 / 161 | agent |
+| 2026-10-19 | Front (simulateur DOM) | 64 / 64 | agent |
+| 2026-10-19 | Backend après la revue croisée P4 (simulateur) | 182 / 182 | agent |
+| 2026-10-19 | Front après la revue croisée P4 (simulateur DOM) | 66 / 66 | agent |
 | 2026-10-18 | Front, de bout en bout contre le backend (simulateur) | 64 / 64 | agent |
 | | Phase 2 dans Apps Script | ⏳ | Harry |

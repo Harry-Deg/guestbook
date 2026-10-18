@@ -21,6 +21,7 @@ var PREFIXE_SESSION = 'sess:';
 var PREFIXE_DEMANDES = 'dem:';
 var PREFIXE_MAILS = 'mails:';
 var PREFIXE_INCONNUS = 'inconnus:';
+var PREFIXE_ALERTE = 'alerte:';
 var CLE_SEL = 'SEL_INSTALLATION';
 
 /** Au-delà de ce nombre d'entrées, un balayage des compteurs périmés est déclenché. */
@@ -146,6 +147,40 @@ function avecVerrou_(fonction, attenteMs) {
   }
 }
 
+/**
+ * Journalise une alerte au plus une fois par jour, quel que soit le nombre d'appels.
+ *
+ * Réservé aux anomalies détectées sur un chemin très fréquenté. `reponsesOuvertes_`
+ * est appelée par `ping`, donc à CHAQUE chargement de page par CHAQUE visiteur : une
+ * DATE_LIMITE saisie « 30/04/2027 » y écrivait une ligne de Journal par visite.
+ */
+function alerterUneFoisParJour_(detail) {
+  var cle = PREFIXE_ALERTE + hacher_(detail).slice(0, 16);
+  var jour = jourCourant_();
+  try {
+    var props = PropertiesService.getScriptProperties();
+    if (props.getProperty(cle) === jour) return false;
+    props.setProperty(cle, jour);
+  } catch (e) {
+    return false; // magasin saturé : on se tait plutôt que de faire échouer un ping
+  }
+  journaliser_('', 'config', 'alerte', detail);
+  return true;
+}
+
+/**
+ * Retire l'apostrophe de neutralisation avant de renvoyer un texte au client.
+ *
+ * `neutraliserFormule_` la pose pour protéger le Sheet ; elle n'a rien à faire sous
+ * les yeux de l'invité, qui verrait « '=TEST() » ou « '-sans lactose » au lieu de ce
+ * qu'il a écrit. Les deux chemins de lecture (récapitulatif immédiat et relecture du
+ * lendemain) partagent désormais cette fonction : ils se contredisaient.
+ */
+function sansApostrophe_(valeur) {
+  var s = String(valeur == null ? '' : valeur);
+  return s.charAt(0) === "'" ? s.slice(1) : s;
+}
+
 /** Écriture de propriété tolérante : un magasin saturé devient une erreur propre. */
 function ecrireProprieteOuEchouer_(cle, valeur) {
   try {
@@ -241,6 +276,20 @@ function heureCourante_() {
  * ne se remplisse pas au fil des mois. Appelé au hasard, une fois sur vingt.
  */
 function balayerCompteurs_() {
+  // Balayage opportuniste, mais SOUS VERROU : hors verrou, il relisait un instantané
+  // puis le réécrivait en bloc, effaçant au passage l'incrément d'une requête
+  // concurrente (C9 autorise ~30 exécutions simultanées). S'il ne peut pas prendre le
+  // verrou tout de suite, il ne force rien : il repassera à la prochaine occasion.
+  var verrou = LockService.getScriptLock();
+  if (!verrou.tryLock(2000)) return 0;
+  try {
+    return balayerCompteursSousVerrou_();
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
+function balayerCompteursSousVerrou_() {
   var props = PropertiesService.getScriptProperties();
   var toutes = props.getProperties();
   var cles = Object.keys(toutes);
@@ -268,6 +317,8 @@ function balayerCompteurs_() {
       garder = cle === PREFIXE_MAILS + aujourdhui;
     } else if (cle.indexOf(PREFIXE_INCONNUS) === 0) {
       garder = cle === PREFIXE_INCONNUS + cetteHeure;
+    } else if (cle.indexOf(PREFIXE_ALERTE) === 0) {
+      garder = toutes[cle] === aujourdhui;
     }
     if (garder) conserver[cle] = toutes[cle];
     else supprimees++;
@@ -481,5 +532,10 @@ function foyerDeSession_(token) {
 
 function fermerSession_(token) {
   var t = String(token == null ? '' : token).trim();
-  if (t) CacheService.getScriptCache().remove(PREFIXE_SESSION + hacher_(t));
+  if (!t) return false;
+  var cle = PREFIXE_SESSION + hacher_(t);
+  var cache = CacheService.getScriptCache();
+  if (!cache.get(cle)) return false;   // rien à fermer : l'appelant ne journalise pas
+  cache.remove(cle);
+  return true;
 }

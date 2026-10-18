@@ -88,13 +88,13 @@ Deux colonnes : `cle`, `valeur`. Lue à chaque requête, en une seule fois.
 
 | Clé | Exemple | Rôle |
 |---|---|---|
-| `NOM_MARIES` | `Alec et Gloria` | Signature des mails et titre du site. |
+| `NOM_MARIES` | `Alec et Gloria` | Signature des mails. Le titre du site est écrit dans `index.html` : les deux doivent concorder à la main (D17, `INSTALLATION.md` §5.2). |
 | `DATE_MARIAGE` | `2027-06-12` | Affichage et décompte. |
 | `DATE_LIMITE` | `2027-04-30` | Au-delà : formulaire en lecture seule, erreur `DATE_LIMITE_DEPASSEE`. |
 | `EXPEDITEUR_NOM` | `Alec et Gloria` | Nom affiché de l'expéditeur du mail. |
 | `EXPEDITEUR_ADRESSE` | *(vide)* | Vide ⇒ `MailApp`. Renseignée ⇒ alias « Envoyer en tant que » via `GmailApp` (§8 du brief). |
 | `REPLY_TO` | `maries@example.com` | Adresse de réponse. Jamais d'adresse réelle dans le dépôt. |
-| `CONTACT_MARIES` | `maries@example.com` | Affichée dans les messages d'erreur (« écrivez-nous »). |
+| `CONTACT_MARIES` | `maries@example.com` | Affichée dans les messages d'erreur et le pied de page du site. **Servie au navigateur par `ping`** : c'est la seule façon de ne pas l'écrire dans un dépôt public (§8 B-2 de `SECURITE.md`). La changer ici suffit, sans redéployer. |
 | `URL_SITE` | `https://…github.io/…` | Rappelée dans le mail. |
 | `PLAFOND_MAILS_JOUR` | `80` | Plafond applicatif, en deçà du quota Gmail (~100, C8). |
 
@@ -133,8 +133,11 @@ Une soumission remplace l'intégralité des lignes du foyer dans `Reponses` et a
 `personne` 60 · `allergies` 200 · `commentaire` 500 · `nom_affichage` 80 · `notes_maries` 500.
 
 ### Ce qui n'est jamais renvoyé au navigateur
-`emails`, `notes_maries`, `foyer_id`, le contenu de `Journal`, `Historique` et `Config` hors
-`DATE_LIMITE`, `NOM_MARIES`, `DATE_MARIAGE`, `CONTACT_MARIES`.
+`emails`, `notes_maries`, `foyer_id`, le contenu de `Journal` et d'`Historique`, et **tout
+`Config` sauf deux clés** : `DATE_LIMITE` et `CONTACT_MARIES`, les seules dont le site ait
+besoin. `NOM_MARIES` et `DATE_MARIAGE` ne sont **pas** envoyés — ils sont écrits en dur
+dans `index.html`. Un contrôle automatisé vérifie qu'aucune autre adresse email que
+`CONTACT_MARIES` n'apparaît dans une réponse.
 
 ### Rétention (C14, R12)
 `Reponses`, `Historique` et `Journal` sont vidés par `purgerDonneesPostEvenement()` après l'événement.

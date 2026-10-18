@@ -1,6 +1,6 @@
 # SECURITE — modèle de menaces et parades
 
-État au 2026-10-18, fin de Phase 2 (backend), **après revue indépendante**.
+État au 2026-10-19, fin de Phase 4, **après deux revues indépendantes**.
 
 > Une revue de sécurité menée par un relecteur qui n'avait pas écrit le code a trouvé
 > **4 points bloquants et 7 points à corriger**, tous réels, tous corrigés depuis. Le détail
@@ -41,12 +41,12 @@ Dit explicitement, pour que personne ne s'illusionne :
 | M6 | **Vol ou rejeu de session** | Token = UUID v4, TTL 6 h, stocké **haché** côté serveur (D18), en `sessionStorage` côté client, invalidé au logout. Donne accès au seul foyer associé | `Securite.gs` · `ouvrirSession_` | ✅ |
 | M7 | **Accès aux données d'un autre foyer** | `foyerDeSession_(token)` est la **seule** source d'un `foyer_id`. Aucune action ne lit un identifiant venu du client — vérifié par test en injectant `foyer_id`, `foyerId` et `foyer` dans la requête | `Code.gs`, `Securite.gs` | ✅ |
 | M8 | **Le client réécrit des données du Sheet** (renomme un invité, se déclare enfant, se déclare accompagnant) | Les noms sont rapprochés de l'onglet `Invites` et **réécrits depuis le Sheet** ; `type_personne` et `est_accompagnant` sont imposés par le serveur | `Code.gs` · `actionSubmitRsvp_` | ✅ |
-| M9 | **XSS** (noms venant du Sheet, saisies d'invités) | Front : `textContent` uniquement, jamais `innerHTML` avec des données. Mail HTML : `echapperHtml_` sur toute valeur insérée. CSP par balise `<meta>` | `Mail.gs` · `echapperHtml_` ; front | ✅ mail · ⏳ front (P3) |
+| M9 | **XSS** (noms venant du Sheet, saisies d'invités) | Front : `textContent` uniquement, jamais `innerHTML` avec des données. Mail HTML : `echapperHtml_` sur toute valeur insérée. CSP par balise `<meta>` | `Mail.gs` · `echapperHtml_` ; front | ✅ mail · ✅ front (analyse statique : zéro `innerHTML`, zéro style en ligne) · ⏳ à confirmer en navigateur réel |
 | M10 | **Injection de formules dans le Sheet** | `assainirTexte_` sur **les trois seuls points d'écriture** de données venant du client : `Reponses`, `Historique` et **`Journal`** (ce dernier était le trou, voir §7 B1). Retrait des caractères de contrôle, troncature, apostrophe devant `=` `+` `-` `@`, y compris masqués par des espaces. Colonnes du `Journal` forcées en format texte en défense en profondeur | `Securite.gs`, `Sheet.gs` · `journaliser_` | ✅ |
 | M11 | **Écritures concurrentes / doublons** | `LockService` sur toute écriture, réécriture complète et idempotente des lignes du foyer, `Historique` en ajout seul | `Sheet.gs` · `ecrireReponsesFoyer_` | ✅ |
-| M12 | **Fuite de données par le dépôt public** | `.gitignore` strict, aucune adresse réelle (tout est en `@example.com`), adresse de test dans la Script Property `EMAIL_TEST`, historique git vérifié | dépôt | ✅ |
+| M12 | **Fuite de données par le dépôt public** | `.gitignore` strict, adresse de test dans la Script Property `EMAIL_TEST`, **adresse de contact servie par l'API depuis `Config`** et non écrite dans le code (corrigé en P4, voir §8 B-2). Aucune adresse réelle dans l'état actuel du dépôt | dépôt | 🔶 l'état actuel est sain ; **l'historique git contient encore une adresse Gmail réelle**, à purger avant le premier `git push` |
 | M13 | **Partage accidentel du Sheet** | Jamais de partage par lien ; accès nominatif aux mariés. Rappelé dans `INSTALLATION.md` et à venir dans `GUIDE_MARIES.md` | procédure | 🔶 |
-| M14 | **Journal trop bavard** | Aucun code, token, régime, allergie ni commentaire dans `Journal` — vérifié par test | `Sheet.gs` · `journaliser_` | ✅ |
+| M14 | **Journal trop bavard** | Aucun code, token, régime, allergie ni commentaire dans `Journal` — vérifié par test. Et depuis P4, **aucun chemin non authentifié ne peut y écrire sans plafond** : `logout` ne trace que s'il a fermé une session, le piège à robots passe par le budget horaire global, et une `DATE_LIMITE` illisible n'alerte qu'une fois par jour (§8 A-1) | `Sheet.gs` · `journaliser_` ; `Code.gs` | ✅ |
 | M15 | **Fuite technique dans une réponse d'erreur** | Toute exception inattendue devient `ERREUR_SERVEUR` ; la trace reste dans le journal d'exécution Google. Vérifié en cassant volontairement le classeur | `Code.gs` · `doPost` | ✅ |
 | M16 | **Requête malformée ou volumineuse** | Corps plafonné à 20 000 caractères, JSON validé, action cherchée avec `hasOwnProperty` (une action nommée `constructor` ou `__proto__` n'est pas routable) | `Code.gs` · `doPost` | ✅ |
 | M17 | **Dépassement de `places_max`** | Nombre de présents et nombre d'accompagnants contrôlés côté serveur, pas seulement dans l'interface | `Code.gs` · `actionSubmitRsvp_` | ✅ |
@@ -80,18 +80,26 @@ Ces points ne peuvent pas être prouvés hors de Google :
 
 | Point de la gate (§3.2 du brief) | État |
 |---|---|
-| Chaque menace a une parade implémentée **et testée** | ✅ pour le backend · ⏳ M9 côté front (P3) |
-| Aucune donnée personnelle ni adresse réelle dans le dépôt (`git log -p` vérifié) | ✅ |
-| Aucune action ne fait confiance à un identifiant fourni par le client | ✅ |
-| La CSP est en place et ne casse pas le site | ⏳ P3 |
-| Les erreurs renvoyées ne contiennent ni trace technique ni contenu interne | ✅ |
+| Chaque menace a une parade implémentée **et testée** | ✅ backend (182 contrôles) · 🔶 front : structure vérifiée et 66 contrôles automatisés, mais jamais ouvert dans un navigateur réel |
+| Aucune donnée personnelle ni adresse réelle dans le dépôt (`git log -p` vérifié) | 🔶 **état actuel ✅ depuis P4** ; l'historique contient encore une adresse Gmail réelle (2 commits), à purger avant publication — procédure en `INSTALLATION.md` §5.1 |
+| Aucune action ne fait confiance à un identifiant fourni par le client | ✅ confirmé ligne à ligne par la revue croisée P4 |
+| La CSP est en place et ne casse pas le site | 🔶 analyse statique concluante (zéro style/script en ligne, les **deux** domaines Apps Script sont dans `connect-src`) ; à confirmer en console réelle |
+| Les erreurs renvoyées ne contiennent ni trace technique ni contenu interne | ✅ vérifié de l'extérieur par `verifier-deploiement.sh` |
+
+> **Note sur `frame-ancestors`** : la directive est présente mais **inerte**, car les
+> navigateurs l'ignorent dans une CSP posée par balise `<meta>`. Sans conséquence ici :
+> il n'y a aucun cookie, et le token vit en `sessionStorage`. On la garde pour le jour
+> où le site serait servi derrière un hébergeur capable de poser des en-têtes HTTP.
 
 
 ## 7. Revue indépendante du 2026-10-18 — défauts trouvés et corrigés
 
 Revue menée par un relecteur qui n'avait pas écrit le code, sur la base du §3.2 du brief.
 Les 122 tests existants n'en couvraient aucun : ils validaient le comportement prévu, pas
-les chemins oubliés. **36 tests de régression** ont été ajoutés, un par défaut.
+les chemins oubliés. **39 tests de régression** ont été ajoutés, au moins un par défaut.
+
+> Une exception, relevée par la revue croisée de Phase 4 : **A6 n'a pas reçu de test
+> dédié**, et sa correction était effectivement incomplète. Voir §8, constat A-1.
 
 ### Bloquants
 
@@ -128,3 +136,64 @@ les invités légitimes pendant une heure — un déni de service, précisément
   signale ces caractères dans les noms de `Invites`, là où ils font des dégâts.
 - **Décalage minuit Paris / Pacifique** entre le compteur applicatif et le quota Gmail :
   réel mais rattrapé par `getRemainingDailyQuota()`. Noté, pas corrigé.
+
+
+## 8. Revue croisée du 2026-10-19 (Phase 4) — défauts trouvés et corrigés
+
+Revue menée par un relecteur indépendant sur les **quatre rôles** du brief (CP, SEC, DES,
+DATA), portant sur les incohérences **entre** les éléments : code ↔ code, code ↔ documents,
+front ↔ contrat d'API. Les constats de §7 n'ont pas été re-signalés, sauf là où la
+correction s'est révélée **incomplète** — ce fut le cas d'A6.
+
+Verdict d'entrée : **aucune gate franchie**, 4 bloquants, 9 points à corriger, 10 suggestions.
+
+### Bloquants
+
+| # | Défaut | Correction |
+|---|---|---|
+| **B-1** | La procédure de **Phase 5 était un titre vide** — alors que la gate CP exige que les actions manuelles soient listées, et que c'était la phase suivante | `INSTALLATION.md` §5.1 à §5.7 écrite : purge de l'historique, contenu réel, activation de Pages, `URL_SITE`, test public, envoi des faire-part, surveillance des 48 h |
+| **B-2** | **Adresse Gmail personnelle en clair** dans `config.js`, donc dans un dépôt public, bientôt servie sur une page publique et affichée dans trois messages d'erreur — alors que `SECURITE.md`, `README.md` et `CLAUDE.md` affirmaient le contraire | L'adresse **quitte le dépôt** : elle est servie par l'API (`ping` et `getRsvp`) depuis `Config!CONTACT_MARIES`. Les mariés peuvent la changer sans redéployer. Les affirmations fausses sont corrigées. **Reste à faire par Harry : purger les 2 commits de l'historique avant le premier `git push`** |
+| **B-3** | **Aucune vérification manuelle faite** : mail réel, concurrence, quotas, mobile, clavier, lecteur d'écran, CSP en console | Hors de portée d'un agent. C'est la session de recette de Harry, `RECETTE.md` §3bis et §4 |
+| **B-4** | Après la date limite, le bouton d'entrée était **masqué** : les écrans « formulaire en lecture seule » et « réponses closes » devenaient **inatteignables**. Une invitée ne pouvait plus relire l'allergie déclarée pour son enfant — alors que le code pour le lui montrer existait et fonctionnait | Le bouton reste affiché et devient « Consulter ma réponse ». Le serveur refuse déjà l'écriture, le formulaire est déjà désactivé. Le test front encodait le défaut : il a été inversé |
+
+### À corriger
+
+| # | Défaut | Correction |
+|---|---|---|
+| **A-1** | **La correction A6 était incomplète.** Trois chemins non authentifiés et sans aucun plafond écrivaient dans `Journal` : `logout` traçait inconditionnellement avant toute validation ; le piège à robots traçait avant le contrôle de forme ; et surtout `reponsesOuvertes_` alertait à **chaque appel de `ping`**, donc à chaque chargement de page par chaque visiteur. Une `DATE_LIMITE` saisie « 30/04/2027 » — le réflexe français — remplissait le classeur en un après-midi | `fermerSession_` renvoie désormais si une session existait, et `logout` ne trace que dans ce cas ; le piège passe après le contrôle de forme et partage le budget horaire global ; nouvelle fonction `alerterUneFoisParJour_`, dont les clés sont balayées comme les autres compteurs |
+| **A-2** | **Le code se contredisait** : `submitRsvp` retirait l'apostrophe de neutralisation du récapitulatif, `getRsvp` ne la retirait pas. Un invité ayant écrit « -sans lactose » voyait son texte correct à l'envoi, puis « '-sans lactose » pré-rempli le lendemain | Une seule fonction partagée, `sansApostrophe_`, appelée par les deux chemins. Le Sheet reste protégé |
+| **A-3** | `evenements` était renvoyé par le serveur et **jamais lu** : le front gardait ses propres libellés en dur. Ajouter un quatrième moment n'aurait rien changé à l'affichage, sans aucune erreur | Le front lit `evenements`. Une seule source de vérité pour les noms ; la grammaire de la phrase reste côté front |
+| **A-4** | Une présence oubliée n'avait **aucun retour visuel** : `aria-invalid` était posé sur un bouton radio en `opacity: 0`, et `:focus-visible` ne se déclenche pas après un focus programmatique consécutif à un appui tactile | Règles CSS sur le `<span>` visible, et contour d'erreur sur `:focus` |
+| **A-5** | `TROP_DE_TENTATIVES` couvre deux situations aux remèdes **opposés**. Sur l'écran code, le message conseillait d'attendre une heure alors qu'il suffisait de demander un nouveau code | Message distinct sur cet écran. Le contrat d'API est inchangé |
+| **A-6** | Le message d'erreur du formulaire était dans la dernière carte : il n'était **jamais à l'écran en même temps** que le champ fautif, vers lequel le focus faisait défiler | Message d'erreur propre à chaque personne, relié par `aria-describedby`, et défilement centré sur lui |
+| **A-7** | `ecrireReponsesFoyer_` effaçait **tout** `Reponses` avant de le réécrire : une interruption entre les deux (erreur transitoire de l'API Sheets, ou les 6 minutes de C9) laissait l'onglet entièrement vide, **pour tous les foyers** | On écrit d'abord, on efface le surplus ensuite. Même coût, sans la fenêtre destructrice. Un test observe l'ordre réel des opérations |
+| **A-8** | Les formules « effectifs par service » de `Synthese` étaient bornées à 2 000 lignes alors que les comptages voisins étaient en colonnes ouvertes : au-delà, les totaux auraient divergé **sans aucun signal** | Plages ouvertes, comme les autres |
+| **A-9** | Documents d'état en retard sur le code : `README` annonçait « Phase 0 terminée », `SECURITE` était daté de P2, les comptages de tests étaient faux (36 annoncés, 39 réels) | Corrigés. Le comptage est désormais relevé sur l'exécution réelle de la suite |
+
+### Suggestions retenues
+
+- `balayerCompteurs_` s'exécutait **hors verrou** et réécrivait un instantané : il pouvait
+  effacer l'incrément d'une requête concurrente. Passé sous `tryLock`, sans forcer.
+- `verifierDonnees()` détectait les doublons de noms avec `toLowerCase()`, alors que
+  l'appariement à l'exécution utilise `cleNom_()`. Deux « José » saisis l'un au clavier
+  (NFC) et l'autre collé depuis macOS (NFD) passaient la vérification, puis rendaient le
+  foyer **définitivement incapable de répondre**. Même clé des deux côtés désormais.
+- Un enfant déclaré absent puis repassé présent retombait sur « aucun régime » au lieu de
+  « menu enfant » : le traiteur aurait compté un menu adulte.
+- « Il vous reste 2 places » alors que l'interface n'offre qu'**un** accompagnant.
+- Le focus initial sur le titre rendait le lien d'évitement inatteignable au clavier.
+- Le pied de page disait « Écrivez-nous » **sans donner d'adresse**.
+- `loading="lazy"` sur les photos : 628 Ko étaient chargés au premier affichage.
+- `.nojekyll` ajouté : sans lui, GitHub Pages rendrait `README.md` et `docs/*.md` en HTML.
+
+### Non corrigé, assumé
+
+- **`maquette.html` servie publiquement** : ce n'est pas un problème de sécurité (dépôt
+  public par construction, `noindex`, adresses `@example.com`, aucune API câblée), mais un
+  risque de **confusion** — un invité qui tomberait dessus verrait un faux formulaire.
+  Un bandeau d'avertissement a été ajouté ; la supprimer avant la mise en ligne reste
+  l'option la plus sûre, c'est une décision de Harry.
+- **Volumétrie** : `etatFoyer_` déclenche 4 lectures d'onglets, `submitRsvp` 4 à 5, dont
+  une **dans** le verrou. Le brief C9 demande une lecture unique par requête. À 150
+  invités ce n'est pas bloquant ; si la Phase 5 révèle des lenteurs, mettre `Config` en
+  cache 60 s divise les lectures par deux sans risque.

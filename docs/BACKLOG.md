@@ -37,8 +37,14 @@ Statuts : `à faire` · `en cours` · `fait` · `reporté v2` · `abandonné`
 | V4 | Questions complémentaires (hébergement, navette, chanson, accessibilité) | à décider |
 | V5 | Galerie photos / identité visuelle des mariés | à décider |
 | V6 | Nom de domaine personnalisé | à décider |
-| V7 | Migration vers l'adresse mail des mariés (`MIGRATION_MAIL.md`) | prévu, post-MVP |
+| V7 | Migration vers l'adresse mail des mariés — paliers 2 et 3 | prévu, post-MVP |
 | V8 | Internationalisation (anglais) | abandonné sauf demande |
+
+> **Arbitrage du 2026-10-19.** `MIGRATION_MAIL.md` et `GUIDE_MARIES.md` étaient classés
+> ici en post-MVP, alors que `RISQUES.md` situait en P5 les parades de R13 (indisponibilité
+> du compte de Harry) et R11/R16 (classeur cassé ou partagé). Les deux documents sont
+> **écrits en P5** ; seuls les paliers 2 et 3 de la migration restent post-MVP. Le
+> **palier 1** (deux cellules de `Config`, aucun redéploiement) peut être fait tout de suite.
 
 ## Hors périmètre explicite
 - Paiement, cagnotte, liste de mariage.

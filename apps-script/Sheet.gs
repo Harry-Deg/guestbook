@@ -394,9 +394,11 @@ function construireSynthese_(feuille) {
 
   // Présents dont le foyer est convié à un service donné (présence unique, D07).
   function parService(colonneFoyer) {
-    return '=SUMPRODUCT(--(Reponses!$' + rPres + '$2:$' + rPres + '$2000="oui"),' +
-           '--(IFERROR(VLOOKUP(Reponses!$' + rFoyer + '$2:$' + rFoyer + '$2000,' +
-           'Foyers!$' + fId + '$2:$' + fDer + '$2000,' + colonneFoyer + ',FALSE),"non")="oui"))';
+    // Plages ouvertes, comme les autres comptages de l'onglet. Bornées à la ligne 2000,
+    // elles auraient divergé en silence des totaux globaux si Reponses dépassait ce seuil.
+    return '=SUMPRODUCT(--(Reponses!$' + rPres + '$2:$' + rPres + '="oui"),' +
+           '--(IFERROR(VLOOKUP(Reponses!$' + rFoyer + '$2:$' + rFoyer + ',' +
+           'Foyers!$' + fId + '$2:$' + fDer + ',' + colonneFoyer + ',FALSE),"non")="oui"))';
   }
 
   var bloc = [
@@ -620,7 +622,12 @@ function verifierDonnees() {
 
     if (id && nom) {
       if (!personnesParFoyer[id]) personnesParFoyer[id] = {};
-      var cle = nom.toLowerCase();
+      // cleNom_ et non toLowerCase() : c'est la clé utilisée à l'exécution pour
+      // apparier les personnes. Avec toLowerCase(), deux « José » saisis l'un au
+      // clavier (NFC) et l'autre collé depuis macOS (NFD) passaient la vérification,
+      // puis déclenchaient DONNEES_INVALIDES à la première connexion du foyer —
+      // qui ne pouvait alors plus jamais répondre.
+      var cle = cleNom_(nom);
       if (personnesParFoyer[id][cle]) {
         erreur('Invites', l, '« ' + nom + ' » apparaît deux fois dans le foyer ' + id +
                ' (déjà ligne ' + personnesParFoyer[id][cle] + ')');
@@ -999,17 +1006,20 @@ function lireReponsesFoyer_(foyerId) {
   });
 
   return {
-    commentaire: lignes.length ? String(lignes[0].commentaire || '') : '',
+    commentaire: lignes.length ? sansApostrophe_(lignes[0].commentaire) : '',
     majLe: lignes.length ? String(lignes[0].maj_le || '') : '',
     personnes: lignes.map(function (r) {
       return {
-        personne: String(r.personne || '').trim(),
+        // sansApostrophe_ : même traitement que le récapitulatif renvoyé par submitRsvp.
+        // Sans cela, un invité ayant écrit « -sans lactose » retrouvait « '-sans lactose »
+        // pré-rempli à sa visite suivante, et le renvoyait tel quel.
+        personne: sansApostrophe_(String(r.personne || '').trim()),
         type: String(r.type_personne || 'adulte').trim().toLowerCase(),
         estAccompagnant: String(r.est_accompagnant || 'non').trim().toLowerCase() === 'oui',
         presence: String(r.presence || '').trim().toLowerCase() === 'oui',
         age: r.age === '' || r.age === null || r.age === undefined ? null : Number(r.age),
         regime: String(r.regime || '').trim().toLowerCase(),
-        allergies: String(r.allergies || '')
+        allergies: sansApostrophe_(r.allergies)
       };
     })
   };
@@ -1070,16 +1080,22 @@ function ecrireReponsesFoyer_(foyerId, personnes, commentaire) {
     var toutes = conservees.concat(nouvelles);
     var nbColonnes = t.entetes.length;
 
-    // On efface d'après la DERNIÈRE LIGNE RÉELLE de la feuille, pas d'après le nombre de
+    // On compte d'après la DERNIÈRE LIGNE RÉELLE de la feuille, pas d'après le nombre de
     // lignes non vides : lireOnglet_ ignore les lignes vides, et une ligne effacée à la
     // main par les mariés aurait laissé une ligne orpheline sous le bloc réécrit (A5).
     var occupees = Math.max(t.feuille.getLastRow() - 1, 0);
-    if (occupees > 0) {
-      t.feuille.getRange(2, 1, occupees, nbColonnes).clearContent();
-    }
+
+    // On ÉCRIT d'abord, on efface le surplus ensuite. L'ordre inverse — effacer tout
+    // puis réécrire — laissait l'onglet ENTIÈREMENT VIDE, pour tous les foyers, si
+    // l'exécution s'interrompait entre les deux : erreur transitoire de l'API Sheets,
+    // ou les 6 minutes de C9. Même coût, sans la fenêtre destructrice.
     if (toutes.length > 0) {
       assurerLignes_(t.feuille, 1 + toutes.length);
       t.feuille.getRange(2, 1, toutes.length, nbColonnes).setValues(toutes);
+    }
+    if (occupees > toutes.length) {
+      t.feuille.getRange(2 + toutes.length, 1, occupees - toutes.length, nbColonnes)
+        .clearContent();
     }
 
     archiverDansHistorique_(soumissionId, horodatage, foyerId, personnes, commentaire);

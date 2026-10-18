@@ -140,6 +140,10 @@ L'information est publique et ne révèle rien.
 un aller-retour de 1 à 4 s (C5) avant le premier affichage, pour une donnée qui ne change jamais.
 `Config` reste la source pour ce que le **script** utilise (mails, date limite).
 **Conséquence** : à la mise en ligne, vérifier que `index.html` et `Config` disent la même chose.
+Le tableau de correspondance est en `INSTALLATION.md` §5.2.
+**Amendé le 2026-10-19 (D29)** : cette décision citait `CONTACT_MARIES` parmi les valeurs
+écrites dans `index.html`. C'était inexact — elle était dans `config.js` — et c'est désormais
+la seule valeur de `Config` à faire le chemin inverse : le serveur la renvoie au navigateur.
 
 ## 2026-10-18 — D18 · Codes et tokens stockés hachés
 **Décision** : `CacheService` ne contient jamais un code ni un token en clair, mais leur empreinte
@@ -160,7 +164,7 @@ n'ayant pas écrit le code n'a pas été passée. La première a trouvé **4 blo
 **Pourquoi** : les 122 tests existants validaient le comportement prévu et n'ont détecté
 aucun des 11 défauts. Ils couvraient les chemins pensés, pas les chemins oubliés — en
 particulier `journaliser_`, qui écrivait dans le classeur une donnée client non assainie.
-**Conséquence** : 36 tests de régression ajoutés, un par défaut ; la même revue sera refaite
+**Conséquence** : 39 tests de régression ajoutés ; la même revue sera refaite
 sur le front en P3 et sur l'ensemble en P4.
 **Détail** : `docs/SECURITE.md` §7.
 
@@ -240,7 +244,7 @@ vérifier en contraste pour un bénéfice faible sur une page consultée une ou 
 retenu. Résultat : 13 couples conformes du premier coup, **un échec** — la bordure des champs
 de saisie était à 2,1:1 pour un minimum de 3:1 (WCAG 1.4.11, contraste des composants
 d'interface, souvent oublié car il ne concerne pas du texte). Corrigée de `#b9b2a5` à
-`#948b7b` (3,4:1).
+`#8d8878` (3,54:1 — la valeur finale retenue dans `style.css`).
 **Règle retenue** : ne jamais éclaircir `--couleur-bordure-forte` sans refaire le calcul.
 C'est noté en commentaire dans `style.css`.
 
@@ -271,3 +275,41 @@ l'enfant, nom de l'accompagnant, `places_max`).
 Sans cela, une case oubliée coûte un aller-retour de 1 à 4 s (C5) pour recevoir un
 `DONNEES_INVALIDES` générique qui ne dit pas quoi corriger. Le front, lui, nomme la personne
 concernée et place le focus sur le bon champ.
+
+## 2026-10-19 — D29 · L'adresse de contact quitte le dépôt et passe par l'API
+**Décision** : `CONTACT_MARIES` n'est plus écrite dans `assets/js/config.js`. Le serveur la
+renvoie dans la réponse à `ping` (et à `getRsvp`), lue depuis l'onglet `Config`. Le front
+l'affiche dans les messages d'erreur et dans le pied de page ; tant que `ping` n'a pas
+répondu, les phrases qui la citent s'en passent au lieu d'afficher un trou.
+**Pourquoi** : le dépôt est public (C1). Une adresse en clair y est moissonnée en quelques
+jours, et elle y reste — dans l'historique git — même après correction. La revue croisée de
+Phase 4 l'a classée bloquante, et elle avait raison : trois documents affirmaient
+simultanément qu'aucune adresse réelle ne figurait dans le dépôt.
+**Effet de bord bienvenu** : les mariés peuvent changer l'adresse de contact depuis le
+classeur, sans toucher au code ni redéployer quoi que ce soit.
+**Ce que cela ne règle pas** : l'adresse est toujours dans **deux commits de l'historique**.
+Seule une réécriture de l'historique avant le premier `git push` l'en retire (R23,
+`INSTALLATION.md` §5.1). C'est une action de Harry.
+
+## 2026-10-19 — D30 · Après la date limite, on consulte au lieu d'être renvoyé
+**Décision** : passé `DATE_LIMITE`, le bouton d'entrée reste affiché et devient « Consulter
+ma réponse ». Le parcours de connexion fonctionne normalement ; le formulaire s'ouvre en
+lecture seule et le serveur refuse toute écriture, comme avant.
+**Pourquoi** : le bouton était masqué, et c'est l'unique porte d'entrée du site. Les deux
+écrans prévus pour ce cas — formulaire en lecture seule, récapitulatif en mode clos —
+étaient donc **inatteignables**, alors qu'ils étaient écrits et fonctionnels. Concrètement,
+une invitée ne pouvait plus relire l'allergie qu'elle avait déclarée pour son enfant.
+**Précédent à retenir** : le test front vérifiait que le bouton disparaissait. Un test peut
+figer un défaut aussi sûrement qu'il protège une fonctionnalité ; c'est la revue par un
+tiers qui l'a vu, pas la suite de tests.
+
+## 2026-10-19 — D31 · Les libellés métier ont une seule source de vérité
+**Décision** : le front affiche les moments de la fête à partir du champ `evenements`
+renvoyé par le serveur, et non d'une liste écrite en dur. La grammaire de la phrase reste
+côté front ; les **noms** viennent du serveur.
+**Pourquoi** : le serveur calculait et renvoyait déjà ce champ, conformément au §5 du brief,
+et le front ne le lisait pas. Ajouter un quatrième moment (une messe, un lendemain à la
+plage) aurait demandé deux modifications dans deux fichiers — et l'oubli de la seconde
+n'aurait produit **aucune erreur**, juste une invitation incomplète envoyée à 150 personnes.
+**Règle générale** : un champ renvoyé par l'API et jamais lu par le front est un défaut en
+attente, pas une réserve pour plus tard.
