@@ -31,7 +31,7 @@ Conventions générales :
 |---|---|---|---|---|
 | `foyer_id` | texte | oui | `F001`, `F002`… | **Unique.** Identifiant interne, jamais renvoyé au navigateur. |
 | `emails` | texte | oui | une ou plusieurs adresses séparées par `;` | **Unique toutes adresses confondues** (D08). Ex. `a@example.com;b@example.com` |
-| `nom_affichage` | texte | oui | ≤ 80 car. | Affiché à l'invité : « Famille Durand », « Marie et Paul ». |
+| `nom_affichage` | texte | oui | ≤ 80 car. | Affiché à l'invité : « Famille Durand », « Alec et Gloria ». |
 | `places_max` | entier | oui | ≥ nombre de personnes du foyer dans `Invites` | Plafond de présents déclarables. Supérieur au nombre de noms ⇒ un « +1 » est proposé (D09). |
 | `invite_vin_honneur` | liste | oui | `oui` / `non` | |
 | `invite_diner` | liste | oui | `oui` / `non` | |
@@ -88,10 +88,10 @@ Deux colonnes : `cle`, `valeur`. Lue à chaque requête, en une seule fois.
 
 | Clé | Exemple | Rôle |
 |---|---|---|
-| `NOM_MARIES` | `Marie et Paul` | Signature des mails et titre du site. |
+| `NOM_MARIES` | `Alec et Gloria` | Signature des mails et titre du site. |
 | `DATE_MARIAGE` | `2027-06-12` | Affichage et décompte. |
 | `DATE_LIMITE` | `2027-04-30` | Au-delà : formulaire en lecture seule, erreur `DATE_LIMITE_DEPASSEE`. |
-| `EXPEDITEUR_NOM` | `Marie et Paul` | Nom affiché de l'expéditeur du mail. |
+| `EXPEDITEUR_NOM` | `Alec et Gloria` | Nom affiché de l'expéditeur du mail. |
 | `EXPEDITEUR_ADRESSE` | *(vide)* | Vide ⇒ `MailApp`. Renseignée ⇒ alias « Envoyer en tant que » via `GmailApp` (§8 du brief). |
 | `REPLY_TO` | `maries@example.com` | Adresse de réponse. Jamais d'adresse réelle dans le dépôt. |
 | `CONTACT_MARIES` | `maries@example.com` | Affichée dans les messages d'erreur (« écrivez-nous »). |
