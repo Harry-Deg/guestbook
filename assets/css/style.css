@@ -1,0 +1,484 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Site RSVP de mariage — feuille de style unique.
+
+   Mobile d'abord : tout est pensé pour un pouce sur un écran de 360 px, puis
+   élargi. Aucune dépendance, aucune police externe (voir « Identité visuelle »).
+   Aucun style en ligne nulle part : la CSP interdit `style="..."` (C2).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── Identité visuelle ─────────────────────────────────────────────────────
+   Valeurs neutres par défaut. Les mariés choisiront couleurs et typographies
+   plus tard (§9 du brief) : il suffira de changer ce bloc.
+
+   Pour utiliser une police Google Fonts, ajouter dans <head> :
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=...">
+   et ajouter à la CSP : style-src 'self' https://fonts.googleapis.com;
+                         font-src https://fonts.gstatic.com;
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  --couleur-fond: #faf8f4;
+  --couleur-carte: #ffffff;
+  --couleur-principale: #7a6a52;
+  --couleur-principale-sombre: #5d5040;
+  --couleur-texte: #2c2a26;
+  --couleur-texte-doux: #5f5a52;
+  --couleur-bordure: #e0dbd1;
+  /* Bordure des champs et boutons : 3,4:1 minimum sur les deux fonds — WCAG 1.4.11,
+     contraste des composants d'interface. Ne pas éclaircir sans revérifier. */
+  --couleur-bordure-forte: #948b7b;
+  --couleur-erreur: #a4342b;
+  --couleur-erreur-fond: #fdf1f0;
+  --couleur-succes: #2f6b4f;
+  --couleur-succes-fond: #eff6f2;
+
+  --police-titres: Iowan Old Style, Palatino, Georgia, 'Times New Roman', serif;
+  --police-texte: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                  Helvetica, Arial, sans-serif;
+
+  --rayon: 10px;
+  --cible-tactile: 44px;      /* jamais en dessous : doigt d'adulte */
+  --largeur-contenu: 34rem;
+  --ombre: 0 1px 2px rgba(44, 42, 38, .06), 0 4px 16px rgba(44, 42, 38, .05);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 1rem 4rem;
+  background: var(--couleur-fond);
+  color: var(--couleur-texte);
+  font-family: var(--police-texte);
+  font-size: 1.0625rem;        /* 17 px : lisible sans zoom */
+  line-height: 1.6;
+  overflow-wrap: break-word;   /* un nom très long ne crée pas de défilement horizontal */
+}
+
+/* ── Accessibilité ─────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 3px solid var(--couleur-principale);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.lien-evitement {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--couleur-carte);
+  padding: .75rem 1rem;
+  z-index: 10;
+}
+.lien-evitement:focus { left: .5rem; top: .5rem; }
+
+.visuellement-masque {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ── Structure ─────────────────────────────────────────────────────────── */
+
+.page {
+  max-width: var(--largeur-contenu);
+  margin: 0 auto;
+}
+
+.bandeau {
+  text-align: center;
+  padding: 2.5rem 0 1.5rem;
+}
+
+.bandeau__prenoms {
+  font-family: var(--police-titres);
+  font-size: clamp(2rem, 9vw, 2.75rem);
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0 0 .5rem;
+}
+
+.bandeau__date {
+  margin: 0;
+  color: var(--couleur-texte-doux);
+  font-size: .95rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.carte {
+  background: var(--couleur-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 1.5rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+h2 {
+  font-family: var(--police-titres);
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0 0 .75rem;
+}
+
+h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 0 0 .25rem;
+}
+
+p { margin: 0 0 1rem; }
+p:last-child { margin-bottom: 0; }
+
+.texte-doux { color: var(--couleur-texte-doux); font-size: .95rem; }
+
+/* ── Informations pratiques ────────────────────────────────────────────── */
+
+.programme { list-style: none; margin: 0; padding: 0; }
+
+.programme li {
+  display: flex;
+  gap: 1rem;
+  padding: .75rem 0;
+  border-top: 1px solid var(--couleur-bordure);
+}
+.programme li:first-child { border-top: 0; padding-top: 0; }
+
+.programme__heure {
+  flex: 0 0 4.5rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--couleur-principale);
+  font-weight: 600;
+}
+
+.programme__lieu { margin: 0; }
+.programme__adresse { margin: 0; font-size: .9rem; color: var(--couleur-texte-doux); }
+
+/* ── Formulaires ───────────────────────────────────────────────────────── */
+
+.champ { margin-bottom: 1.25rem; }
+.champ:last-child { margin-bottom: 0; }
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+
+.aide {
+  display: block;
+  font-weight: 400;
+  font-size: .9rem;
+  color: var(--couleur-texte-doux);
+  margin-bottom: .4rem;
+}
+
+input[type="email"],
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  min-height: var(--cible-tactile);
+  padding: .6rem .75rem;
+  font: inherit;
+  font-size: 1rem;             /* au moins 16 px : évite le zoom automatique sur iOS */
+  color: var(--couleur-texte);
+  background: var(--couleur-carte);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon);
+}
+
+textarea { min-height: 6rem; resize: vertical; }
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%235f5a52' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .9rem center;
+  padding-right: 2.5rem;
+}
+
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] {
+  border-color: var(--couleur-erreur);
+  border-width: 2px;
+}
+
+/* Champ du code : un seul champ, large, pour que le collage fonctionne. */
+.champ-code input {
+  font-size: 1.75rem;
+  letter-spacing: .5em;
+  text-align: center;
+  padding-left: .5em;          /* compense l'espacement sur le dernier caractère */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Piège à robots : invisible pour un humain, lisible par un robot (M4). */
+.champ-piege {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  width: 100%;
+  min-height: var(--cible-tactile);
+  padding: .7rem 1.25rem;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--couleur-principale);
+  border: 1px solid transparent;
+  border-radius: var(--rayon);
+  cursor: pointer;
+  text-align: center;
+}
+
+.bouton:hover:not(:disabled) { background: var(--couleur-principale-sombre); }
+
+.bouton:disabled {
+  opacity: .6;
+  cursor: progress;
+}
+
+.bouton--secondaire {
+  color: var(--couleur-principale);
+  background: transparent;
+  border-color: var(--couleur-bordure-forte);
+  font-weight: 500;
+}
+.bouton--secondaire:hover:not(:disabled) { background: var(--couleur-fond); }
+
+.bouton--lien {
+  width: auto;
+  min-height: var(--cible-tactile);
+  padding: .5rem 0;
+  color: var(--couleur-principale);
+  background: none;
+  border: 0;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Indicateur d'attente : le démarrage à froid dure 1 à 4 s (C5), il faut
+   que l'invité voie qu'il se passe quelque chose. */
+.rouet {
+  width: 1.1em;
+  height: 1.1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: tourner .7s linear infinite;
+}
+@keyframes tourner { to { transform: rotate(360deg); } }
+
+/* ── Messages ──────────────────────────────────────────────────────────── */
+
+.message {
+  display: flex;
+  gap: .6rem;
+  padding: .85rem 1rem;
+  border-radius: var(--rayon);
+  border: 1px solid;
+  margin-bottom: 1.25rem;
+  font-size: .97rem;
+}
+
+.message--erreur {
+  color: var(--couleur-erreur);
+  background: var(--couleur-erreur-fond);
+  border-color: var(--couleur-erreur);
+}
+
+.message--succes {
+  color: var(--couleur-succes);
+  background: var(--couleur-succes-fond);
+  border-color: var(--couleur-succes);
+}
+
+.message--info {
+  color: var(--couleur-texte-doux);
+  background: var(--couleur-fond);
+  border-color: var(--couleur-bordure);
+}
+
+.message p { margin: 0; }
+.message p + p { margin-top: .4rem; }
+
+.erreur-champ {
+  display: block;
+  margin-top: .35rem;
+  color: var(--couleur-erreur);
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+/* ── Personnes du foyer ────────────────────────────────────────────────── */
+
+.personne {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.personne__nom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.etiquette {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--couleur-texte-doux);
+  background: var(--couleur-fond);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 999px;
+  padding: .1rem .55rem;
+  white-space: nowrap;
+}
+
+/* Choix présent / absent : deux grandes cibles, pas une case à cocher. */
+.choix-presence {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+  border: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.choix-presence legend { padding: 0; margin-bottom: .35rem; font-weight: 600; }
+
+.choix-presence__option { position: relative; }
+
+.choix-presence input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.choix-presence span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cible-tactile);
+  padding: .5rem;
+  text-align: center;
+  background: var(--couleur-carte);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon);
+  font-weight: 500;
+}
+
+.choix-presence input:checked + span {
+  color: #fff;
+  background: var(--couleur-principale);
+  border-color: var(--couleur-principale);
+}
+
+.choix-presence input:focus-visible + span {
+  outline: 3px solid var(--couleur-principale);
+  outline-offset: 2px;
+}
+
+/* Les détails n'apparaissent que si la personne est présente. */
+.details-presence { padding-top: .25rem; }
+
+.ligne-deux {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 30rem) {
+  .ligne-deux { grid-template-columns: 7rem 1fr; }
+}
+
+/* Accompagnant : on n'affiche le bloc que si une place est libre. */
+.accompagnant { border-style: dashed; }
+
+.case-a-cocher {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  min-height: var(--cible-tactile);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.case-a-cocher input {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: .2rem 0 0;
+  flex: 0 0 auto;
+  accent-color: var(--couleur-principale);
+}
+
+/* ── Récapitulatif ─────────────────────────────────────────────────────── */
+
+.recap { list-style: none; margin: 0 0 1.25rem; padding: 0; }
+
+.recap li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .7rem 0;
+  border-top: 1px solid var(--couleur-bordure);
+}
+.recap li:first-child { border-top: 0; }
+
+.recap__detail { font-size: .9rem; color: var(--couleur-texte-doux); }
+
+.recap__etat { font-weight: 600; white-space: nowrap; }
+.recap__etat--present { color: var(--couleur-succes); }
+.recap__etat--absent { color: var(--couleur-texte-doux); }
+
+/* ── Pied de page ──────────────────────────────────────────────────────── */
+
+.pied {
+  text-align: center;
+  padding: 2rem 0 0;
+  font-size: .9rem;
+  color: var(--couleur-texte-doux);
+}
+
+.pied a { color: var(--couleur-principale); }
+
+/* ── Impression ────────────────────────────────────────────────────────── */
+
+@media print {
+  .carte { box-shadow: none; break-inside: avoid; }
+  .bouton, .bouton--lien { display: none; }
+}

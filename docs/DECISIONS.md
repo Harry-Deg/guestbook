@@ -184,3 +184,31 @@ présente comme prévue — **chaque connexion** échouerait en `ERREUR_SERVEUR`
 compréhensible. Un piège latent dans une case que l'on invite à remplir n'est pas acceptable.
 **Pour activer l'alias** : ajouter la portée dans `appsscript.json`, réautoriser, passer le
 drapeau à `true`. À documenter dans `MIGRATION_MAIL.md` (§8 du brief).
+
+## 2026-10-18 — D23 · Aucune police externe par défaut
+**Décision** : les titres utilisent une pile serif système (`Iowan Old Style, Palatino,
+Georgia, Times New Roman, serif`), le texte une pile sans-serif système. Aucun appel à
+Google Fonts.
+**Pourquoi** : le brief autorise une police Google (§3.3) mais ne l'impose pas. S'en passer
+évite une requête bloquante au premier affichage — qui s'ajouterait au démarrage à froid de
+1 à 4 s (C5) —, deux entrées de plus dans la CSP, et une fuite d'adresse IP vers Google avant
+tout consentement. Les piles système donnent un rendu correct et différent sur chaque
+plateforme, ce qui convient à une identité volontairement neutre.
+**Réversible** : la marche à suivre, CSP comprise, est écrite en commentaire en tête de
+`style.css`. À rouvrir quand les mariés choisiront leur identité visuelle (§9).
+
+## 2026-10-18 — D24 · Palette claire assumée, pas de thème sombre
+**Décision** : une seule palette, claire, appliquée explicitement sur `body`.
+**Pourquoi** : la page est un faire-part, pas une application ; le rendu doit être le même
+pour tout le monde, y compris à l'impression. Un thème sombre doublerait la surface à
+vérifier en contraste pour un bénéfice faible sur une page consultée une ou deux fois.
+**Conséquence** : le fond est peint explicitement, un téléphone en mode sombre n'altère rien.
+
+## 2026-10-18 — D25 · Contrastes vérifiés par calcul, pas à l'œil
+**Décision** : chaque couple couleur/fond est passé au calcul de ratio WCAG avant d'être
+retenu. Résultat : 13 couples conformes du premier coup, **un échec** — la bordure des champs
+de saisie était à 2,1:1 pour un minimum de 3:1 (WCAG 1.4.11, contraste des composants
+d'interface, souvent oublié car il ne concerne pas du texte). Corrigée de `#b9b2a5` à
+`#948b7b` (3,4:1).
+**Règle retenue** : ne jamais éclaircir `--couleur-bordure-forte` sans refaire le calcul.
+C'est noté en commentaire dans `style.css`.

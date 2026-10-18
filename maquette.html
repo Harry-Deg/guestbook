@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Maquette — site RSVP du mariage</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  /* Habillage propre à la maquette : rien de tout cela n'ira dans le site. */
+  .maquette-intro {
+    max-width: 34rem; margin: 1.5rem auto; padding: 1rem 1.25rem;
+    background: #fff8e1; border: 1px solid #e0cf96; border-radius: 10px;
+    font-size: .95rem;
+  }
+  .maquette-intro h1 { font-size: 1.15rem; margin: 0 0 .5rem; }
+  .maquette-intro ul { margin: .5rem 0 0; padding-left: 1.1rem; }
+  .maquette-ecran { max-width: 34rem; margin: 0 auto; }
+  .maquette-titre {
+    max-width: 34rem; margin: 3rem auto 1rem; padding: .4rem .8rem;
+    background: #2c2a26; color: #fff; border-radius: 6px;
+    font: 600 .8rem/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  .maquette-note {
+    max-width: 34rem; margin: -.5rem auto 1rem; padding: 0 .2rem;
+    font-size: .85rem; color: #5f5a52; font-style: italic;
+  }
+  /* Interactivité sans JavaScript, pour que la maquette s'ouvre d'un double-clic. */
+  .personne:has(.presence-non:checked) .details-presence { display: none; }
+  .accompagnant:has(.ajout-accompagnant:not(:checked)) .details-accompagnant { display: none; }
+</style>
+</head>
+<body>
+
+<div class="maquette-intro">
+  <h1>Maquette — à valider avant câblage</h1>
+  <p>Les 5 écrans et tous les états, empilés sur une seule page. Rien n'est connecté :
+     aucun bouton n'envoie quoi que ce soit, les données sont inventées.</p>
+  <ul>
+    <li>Les couleurs et la typographie sont <strong>neutres par défaut</strong> — les mariés
+        choisiront (§9). Tout se change dans une dizaine de lignes en haut de <code>style.css</code>.</li>
+    <li>À tester <strong>au pouce sur un téléphone</strong> : c'est la cible.</li>
+    <li>Les cases « présent / absent » et « j'ajoute un accompagnant » réagissent vraiment.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 1 / 5 — Accueil : les informations pratiques</p>
+<p class="maquette-note">Visible sans se connecter. Le bouton mène à l'écran 2.</p>
+
+<div class="maquette-ecran">
+  <header class="bandeau">
+    <p class="bandeau__prenoms">Marie &amp; Paul</p>
+    <p class="bandeau__date">Samedi 12 juin 2027</p>
+  </header>
+
+  <section class="carte">
+    <h2>Vous êtes invités</h2>
+    <p>Nous serions très heureux de vous compter parmi nous. Merci de nous dire si vous
+       venez avant le <strong>30 avril 2027</strong>.</p>
+    <button type="button" class="bouton">Répondre à l'invitation</button>
+  </section>
+
+  <section class="carte">
+    <h2>Le programme</h2>
+    <ul class="programme">
+      <li>
+        <span class="programme__heure">15 h 00</span>
+        <span>
+          <p class="programme__lieu"><strong>Cérémonie</strong></p>
+          <p class="programme__adresse">Église Saint-Martin, 12 place du Marché, Exempleville</p>
+        </span>
+      </li>
+      <li>
+        <span class="programme__heure">17 h 00</span>
+        <span>
+          <p class="programme__lieu"><strong>Vin d'honneur</strong></p>
+          <p class="programme__adresse">Domaine des Tilleuls, route de la Vallée</p>
+        </span>
+      </li>
+      <li>
+        <span class="programme__heure">20 h 00</span>
+        <span>
+          <p class="programme__lieu"><strong>Dîner et soirée</strong></p>
+          <p class="programme__adresse">Domaine des Tilleuls, grange</p>
+        </span>
+      </li>
+      <li>
+        <span class="programme__heure">11 h 00</span>
+        <span>
+          <p class="programme__lieu"><strong>Brunch du lendemain</strong></p>
+          <p class="programme__adresse">Domaine des Tilleuls, jardin</p>
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="carte">
+    <h2>Venir et dormir</h2>
+    <p><strong>En voiture</strong> — A42, sortie 7, puis 10 minutes. Parking gratuit sur place.</p>
+    <p><strong>En train</strong> — Gare d'Exempleville, à 15 minutes. Une navette est prévue,
+       dites-le nous dans votre réponse.</p>
+    <p class="texte-doux">Quelques adresses d'hôtels et de chambres d'hôtes seront ajoutées ici.</p>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 2 / 5 — Je donne mon adresse</p>
+<p class="maquette-note">Un seul champ. Le piège à robots est présent dans le code, invisible à l'écran.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <h2>Répondre à l'invitation</h2>
+    <p>Indiquez l'adresse email à laquelle vous avez reçu le faire-part. Nous vous enverrons
+       un code à 6 chiffres pour accéder à votre réponse.</p>
+
+    <div class="champ">
+      <label for="m-email">Votre adresse email</label>
+      <input type="email" id="m-email" name="email" autocomplete="email"
+             inputmode="email" placeholder="prenom.nom@example.com">
+    </div>
+
+    <div class="champ-piege" aria-hidden="true">
+      <label for="m-website">Ne remplissez pas ce champ</label>
+      <input type="text" id="m-website" name="website" tabindex="-1" autocomplete="off">
+    </div>
+
+    <button type="button" class="bouton">Recevoir mon code</button>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 2 — pendant l'envoi</p>
+<p class="maquette-note">Le démarrage à froid dure 1 à 4 s (C5) : le bouton se verrouille et le dit.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <h2>Répondre à l'invitation</h2>
+    <div class="champ">
+      <label for="m-email2">Votre adresse email</label>
+      <input type="email" id="m-email2" value="marie.durand@example.com" readonly>
+    </div>
+    <button type="button" class="bouton" disabled>
+      <span class="rouet" aria-hidden="true"></span> Envoi en cours…
+    </button>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 2 — adresse inconnue</p>
+<p class="maquette-note">Message explicite plutôt que flou (décision D04) : l'invité doit pouvoir se rattraper.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <h2>Répondre à l'invitation</h2>
+    <div class="message message--erreur" role="alert">
+      <p>Cette adresse n'est pas sur notre liste. Utilisez celle où vous avez reçu le
+         faire-part, ou écrivez-nous à <a href="mailto:maries@example.com">maries@example.com</a>.</p>
+    </div>
+    <div class="champ">
+      <label for="m-email3">Votre adresse email</label>
+      <input type="email" id="m-email3" value="mauvaise@example.com"
+             aria-invalid="true" aria-describedby="m-err3">
+      <span class="erreur-champ" id="m-err3">Adresse non reconnue</span>
+    </div>
+    <button type="button" class="bouton">Recevoir mon code</button>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 3 / 5 — Je saisis le code</p>
+<p class="maquette-note">Un seul champ, clavier numérique, le collage fonctionne, remplissage automatique iOS/Android.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <h2>Votre code</h2>
+    <p>Nous avons envoyé un code à 6 chiffres à <strong>marie.durand@example.com</strong>.
+       Il est valable 10 minutes.</p>
+
+    <div class="champ champ-code">
+      <label for="m-code">Code à 6 chiffres</label>
+      <span class="aide" id="m-aide-code">Pensez à regarder dans vos courriers indésirables.</span>
+      <input type="text" id="m-code" inputmode="numeric" autocomplete="one-time-code"
+             pattern="[0-9]{6}" maxlength="6" placeholder="······"
+             aria-describedby="m-aide-code">
+    </div>
+
+    <button type="button" class="bouton">Valider</button>
+    <p class="texte-doux"><button type="button" class="bouton--lien">Renvoyer un code</button>
+       · <button type="button" class="bouton--lien">Changer d'adresse</button></p>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 3 — code incorrect</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <h2>Votre code</h2>
+    <div class="message message--erreur" role="alert">
+      <p>Code incorrect, vérifiez et réessayez.</p>
+      <p>Il vous reste 3 essais.</p>
+    </div>
+    <div class="champ champ-code">
+      <label for="m-code2">Code à 6 chiffres</label>
+      <input type="text" id="m-code2" value="123456" inputmode="numeric"
+             aria-invalid="true" aria-describedby="m-err-code2">
+      <span class="erreur-champ" id="m-err-code2">Ce code ne correspond pas</span>
+    </div>
+    <button type="button" class="bouton">Valider</button>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 4 / 5 — Le formulaire</p>
+<p class="maquette-note">Foyer de 4 personnes, 5 places : un accompagnant est donc proposé.
+   Les détails n'apparaissent que pour les personnes présentes — essayez de cliquer.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <h2>Famille Durand</h2>
+    <p class="texte-doux">Vous êtes conviés au vin d'honneur, au dîner et au brunch.
+       Vous pouvez modifier votre réponse jusqu'au 30 avril 2027.</p>
+  </section>
+
+  <section class="carte">
+    <div class="personne">
+      <div class="personne__nom"><h3>Marie Durand</h3></div>
+      <fieldset class="choix-presence">
+        <legend class="visuellement-masque">Marie Durand sera-t-elle présente ?</legend>
+        <span class="choix-presence__option">
+          <input type="radio" name="p1" id="p1-oui" checked>
+          <span>Je serai là</span>
+        </span>
+        <span class="choix-presence__option">
+          <input type="radio" name="p1" id="p1-non" class="presence-non">
+          <span>Absente</span>
+        </span>
+      </fieldset>
+      <div class="details-presence">
+        <div class="champ">
+          <label for="p1-regime">Régime alimentaire</label>
+          <select id="p1-regime">
+            <option>Aucun régime particulier</option>
+            <option selected>Végétarien</option>
+            <option>Végétalien</option>
+            <option>Sans porc</option>
+            <option>Sans gluten</option>
+            <option>Autre (précisez ci-dessous)</option>
+          </select>
+        </div>
+        <div class="champ">
+          <label for="p1-allergies">Allergies ou précisions</label>
+          <span class="aide">Laissez vide si vous n'en avez pas.</span>
+          <input type="text" id="p1-allergies" maxlength="200">
+        </div>
+      </div>
+    </div>
+
+    <div class="personne">
+      <div class="personne__nom"><h3>Paul Durand</h3></div>
+      <fieldset class="choix-presence">
+        <legend class="visuellement-masque">Paul Durand sera-t-il présent ?</legend>
+        <span class="choix-presence__option">
+          <input type="radio" name="p2" id="p2-oui" checked>
+          <span>Je serai là</span>
+        </span>
+        <span class="choix-presence__option">
+          <input type="radio" name="p2" id="p2-non" class="presence-non">
+          <span>Absent</span>
+        </span>
+      </fieldset>
+      <div class="details-presence">
+        <div class="champ">
+          <label for="p2-regime">Régime alimentaire</label>
+          <select id="p2-regime"><option selected>Aucun régime particulier</option></select>
+        </div>
+        <div class="champ">
+          <label for="p2-allergies">Allergies ou précisions</label>
+          <input type="text" id="p2-allergies" value="Allergie aux fruits à coque" maxlength="200">
+        </div>
+      </div>
+    </div>
+
+    <div class="personne">
+      <div class="personne__nom">
+        <h3>Léa Durand</h3>
+        <span class="etiquette">Enfant</span>
+      </div>
+      <fieldset class="choix-presence">
+        <legend class="visuellement-masque">Léa Durand sera-t-elle présente ?</legend>
+        <span class="choix-presence__option">
+          <input type="radio" name="p3" id="p3-oui" checked>
+          <span>Elle sera là</span>
+        </span>
+        <span class="choix-presence__option">
+          <input type="radio" name="p3" id="p3-non" class="presence-non">
+          <span>Absente</span>
+        </span>
+      </fieldset>
+      <div class="details-presence">
+        <div class="ligne-deux">
+          <div class="champ">
+            <label for="p3-age">Âge</label>
+            <input type="number" id="p3-age" min="0" max="17" value="7" inputmode="numeric">
+          </div>
+          <div class="champ">
+            <label for="p3-regime">Régime alimentaire</label>
+            <select id="p3-regime"><option selected>Menu enfant</option></select>
+          </div>
+        </div>
+        <div class="champ">
+          <label for="p3-allergies">Allergies ou précisions</label>
+          <input type="text" id="p3-allergies" maxlength="200">
+        </div>
+      </div>
+    </div>
+
+    <div class="personne">
+      <div class="personne__nom">
+        <h3>Tom Durand</h3>
+        <span class="etiquette">Enfant</span>
+      </div>
+      <fieldset class="choix-presence">
+        <legend class="visuellement-masque">Tom Durand sera-t-il présent ?</legend>
+        <span class="choix-presence__option">
+          <input type="radio" name="p4" id="p4-oui">
+          <span>Il sera là</span>
+        </span>
+        <span class="choix-presence__option">
+          <input type="radio" name="p4" id="p4-non" class="presence-non" checked>
+          <span>Absent</span>
+        </span>
+      </fieldset>
+      <div class="details-presence">
+        <div class="champ"><label>Régime alimentaire</label></div>
+      </div>
+    </div>
+
+    <div class="personne accompagnant">
+      <label class="case-a-cocher" for="acc">
+        <input type="checkbox" id="acc" class="ajout-accompagnant">
+        <span>Je viens accompagné·e <span class="texte-doux">(il vous reste 1 place)</span></span>
+      </label>
+      <div class="details-accompagnant">
+        <div class="champ">
+          <label for="acc-nom">Nom de votre accompagnant·e</label>
+          <span class="aide">Pour le plan de table et son menu.</span>
+          <input type="text" id="acc-nom" maxlength="60">
+        </div>
+        <div class="champ">
+          <label for="acc-regime">Régime alimentaire</label>
+          <select id="acc-regime"><option selected>Aucun régime particulier</option></select>
+        </div>
+        <div class="champ">
+          <label for="acc-allergies">Allergies ou précisions</label>
+          <input type="text" id="acc-allergies" maxlength="200">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="carte">
+    <div class="champ">
+      <label for="m-commentaire">Un mot pour nous&nbsp;?</label>
+      <span class="aide">Navette, hébergement, contrainte d'accès, ou simplement un message.</span>
+      <textarea id="m-commentaire" maxlength="500"></textarea>
+    </div>
+    <button type="button" class="bouton">Envoyer notre réponse</button>
+    <p class="texte-doux">Vous pourrez modifier votre réponse jusqu'au 30 avril 2027.</p>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">Écran 5 / 5 — Merci</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <div class="message message--succes" role="status">
+      <p><strong>C'est enregistré, merci&nbsp;!</strong></p>
+    </div>
+    <h2>Votre réponse</h2>
+    <ul class="recap">
+      <li>
+        <span>Marie Durand<br><span class="recap__detail">Végétarien</span></span>
+        <span class="recap__etat recap__etat--present">Présente</span>
+      </li>
+      <li>
+        <span>Paul Durand<br><span class="recap__detail">Allergie aux fruits à coque</span></span>
+        <span class="recap__etat recap__etat--present">Présent</span>
+      </li>
+      <li>
+        <span>Léa Durand<br><span class="recap__detail">7 ans · menu enfant</span></span>
+        <span class="recap__etat recap__etat--present">Présente</span>
+      </li>
+      <li>
+        <span>Tom Durand</span>
+        <span class="recap__etat recap__etat--absent">Absent</span>
+      </li>
+    </ul>
+    <button type="button" class="bouton bouton--secondaire">Modifier ma réponse</button>
+    <p class="texte-doux">Réponse enregistrée le 18 octobre 2026 à 14 h 32.
+       Vous pouvez la modifier jusqu'au 30 avril 2027.</p>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">État — session expirée</p>
+<p class="maquette-note">Après 6 heures, ou si le cache de Google a évincé la session.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <div class="message message--erreur" role="alert">
+      <p>Votre session a expiré, reconnectez-vous.</p>
+    </div>
+    <p>Pas d'inquiétude : votre réponse est bien enregistrée, il suffit de redemander un code.</p>
+    <button type="button" class="bouton">Recevoir un nouveau code</button>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">État — les réponses sont closes</p>
+<p class="maquette-note">Après la date limite : lecture seule, pas de formulaire.</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <div class="message message--info" role="status">
+      <p>Les réponses sont closes depuis le 30 avril 2027.</p>
+    </div>
+    <h2>Votre réponse</h2>
+    <ul class="recap">
+      <li><span>Marie Durand</span><span class="recap__etat recap__etat--present">Présente</span></li>
+      <li><span>Paul Durand</span><span class="recap__etat recap__etat--present">Présent</span></li>
+    </ul>
+    <p class="texte-doux">Pour toute modification, écrivez-nous à
+       <a href="mailto:maries@example.com">maries@example.com</a>.</p>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<p class="maquette-titre">État — trop de tentatives / service indisponible</p>
+
+<div class="maquette-ecran">
+  <section class="carte">
+    <div class="message message--erreur" role="alert">
+      <p>Trop de tentatives. Réessayez dans une heure, ou écrivez-nous à
+         <a href="mailto:maries@example.com">maries@example.com</a>.</p>
+    </div>
+  </section>
+  <section class="carte">
+    <div class="message message--erreur" role="alert">
+      <p>Le service est très sollicité aujourd'hui, réessayez demain ou écrivez-nous à
+         <a href="mailto:maries@example.com">maries@example.com</a>.</p>
+    </div>
+  </section>
+  <section class="carte">
+    <div class="message message--erreur" role="alert">
+      <p>Petit souci technique, réessayez dans un instant.</p>
+    </div>
+    <button type="button" class="bouton bouton--secondaire">Réessayer</button>
+  </section>
+</div>
+
+<footer class="pied">
+  <p>Maquette non connectée · <a href="docs/RECETTE.md">plan de test</a></p>
+</footer>
+
+</body>
+</html>
