@@ -48,6 +48,15 @@ verifier "version $VERSION_ATTENDUE en ligne" "$PING" "\"version\":\"$VERSION_AT
 verifier "la date limite est lue dans Config" "$PING" '"dateLimite":"[0-9]\{4\}-'
 verifier "l'état des réponses est renvoyé" "$PING" '"reponsesOuvertes":'
 
+# L'adresse de contact doit venir du classeur : c'est elle qui s'affiche dans les
+# messages d'erreur et le pied de page du site. Elle n'est plus écrite dans le dépôt.
+verifier "l'adresse de contact est servie depuis Config" "$PING" '"contact":"[^"]*@[^"]*"'
+
+if ! printf '%s' "$PING" | grep -q '"contact":"[^"]*@'; then
+  echo "  NOTE  renseignez CONTACT_MARIES dans l'onglet Config : sans elle, le site"
+  echo "        n'affiche aucune adresse à qui écrire en cas de problème."
+fi
+
 if printf '%s' "$PING" | grep -q '"reponsesOuvertes":false'; then
   echo "  NOTE  les réponses sont CLOSES : vérifiez DATE_LIMITE dans l'onglet Config."
 fi

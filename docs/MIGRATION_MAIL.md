@@ -120,7 +120,7 @@ appartiennent aux mariés.
    monde** ». ⚠️ Cela produit une **nouvelle URL `/exec`**.
 4. **Reporter la nouvelle URL** dans `assets/js/config.js` (`API_URL`), puis `git push` —
    GitHub Pages se met à jour tout seul en une ou deux minutes.
-5. **Vérifier** : `./outils/verifier-deploiement.sh "<nouvelle URL>"`, 12 contrôles.
+5. **Vérifier** : `./outils/verifier-deploiement.sh "<nouvelle URL>"`, 13 contrôles.
 6. **Désactiver l'ancien déploiement** côté Harry, pour qu'aucune réponse ne continue à
    arriver dans l'ancien classeur.
 

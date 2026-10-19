@@ -128,6 +128,8 @@ Après le premier déploiement.
 ### 3.1 Déploiement — ✅ **fait le 2026-10-19**
 
 - [x] `./outils/verifier-deploiement.sh "<URL>"` : **12 contrôles, 12 OK**, sur le
+      déploiement du 2026-10-19. Le script en compte **13** depuis les corrections P4
+      (contrôle du champ `contact`) : à relancer après le redéploiement.
       déploiement réel. `version` = `0.2.0`, `dateLimite` = `2027-04-10` lue dans `Config`,
       `reponsesOuvertes` = `true`.
 - [ ] **À refaire après le redéploiement des corrections P4** : `ping` doit désormais
@@ -225,9 +227,38 @@ Depuis le même réseau Wi-Fi, l'adresse est `http://<IP-de-votre-Mac>:8000`
 ### Navigation clavier, sur ordinateur
 
 - [ ] `Tab` seul, sans souris, du début à la fin du parcours.
+- [ ] **Le tout premier `Tab`, page fraîchement chargée, révèle le lien « Aller au
+      contenu »** en haut à gauche. Il était inatteignable avant les corrections P4 :
+      le focus partait d'office sur le titre, donc après lui.
 - [ ] Le focus est **toujours visible** (contour marine).
 - [ ] `Espace` coche les boutons « Présent·e / Absent·e ».
 - [ ] Après chaque changement d'écran, le focus est sur le titre du nouvel écran.
+
+### Comportements corrigés en P4 — à confirmer en vrai
+
+Ces six points viennent de la revue croisée. Ils sont vérifiés par 20 contrôles
+automatisés, mais trois d'entre eux ne se jugent **qu'à l'œil**.
+
+- [ ] **Présence oubliée** : ne rien cocher pour une personne, puis *Envoyer notre
+      réponse*. Attendu : le bloc de cette personne se **colore en rouge**, et le
+      message d'erreur est **juste à côté d'elle**, pas en bas de page. C'est le défaut
+      A-4 : avant, rien n'était signalé visuellement.
+- [ ] **Le même test au doigt, sur téléphone** : le retour visuel doit apparaître là
+      aussi. C'est précisément le cas que `:focus-visible` ne couvrait pas.
+- [ ] **Pied de page** : l'adresse de contact s'affiche et est **cliquable**. Si elle
+      n'apparaît pas, `CONTACT_MARIES` n'est pas renseignée dans `Config` — ou `ping`
+      n'a pas répondu.
+- [ ] **Les moments de la fête** (« Vous êtes conviés : vin d'honneur, dîner et brunch
+      du lendemain ») viennent désormais du serveur. Pour le prouver : changer un
+      `invite_*` à `non` dans `Foyers`, recharger, la phrase doit suivre.
+- [ ] **Allergie commençant par un tiret** : saisir `-sans lactose`, envoyer, se
+      déconnecter, se reconnecter. Attendu : le champ est pré-rempli `-sans lactose`,
+      **sans apostrophe devant**. Dans le Sheet, en revanche, l'apostrophe de
+      protection doit bien être là.
+- [ ] **Après la date limite** (mettre temporairement `DATE_LIMITE` à une date passée
+      dans `Config`) : le bouton d'accueil doit rester **visible** et dire
+      « Consulter ma réponse », et le parcours doit mener au formulaire en lecture
+      seule. Remettre la vraie date ensuite.
 
 ---
 
@@ -238,8 +269,10 @@ Depuis le même réseau Wi-Fi, l'adresse est `http://<IP-de-votre-Mac>:8000`
 - [ ] Rechargement de page : la session est conservée ; perdue après le logout.
 - [ ] Seuls les événements auxquels le foyer est convié sont affichés.
 - [ ] `places_max` : impossible de déclarer plus de présents.
-- [ ] Date limite dépassée : formulaire en lecture seule et message dédié.
+- [ ] Date limite dépassée : formulaire en lecture seule et message dédié —
+      **et accessible**, le bouton d'entrée ne disparaît pas (B-4).
 - [ ] Chaque état a été vu à l'écran : chargement, erreur, succès, session expirée, réponses closes.
+      Les deux derniers n'étaient pas atteignables avant les corrections P4.
 
 **Sécurité**
 - [ ] Un nom contenant `<script>alert(1)</script>` saisi dans le Sheet s'affiche comme du texte.
