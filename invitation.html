@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!--
+  CSP. Cette page ne manipule ni session, ni token, ni donnée d'invité : elle
+  n'appelle aucune API. Elle a donc besoin de deux autorisations que la page
+  RSVP n'a pas, et d'aucune des siennes :
+    · media-src 'self'  pour la musique d'ambiance ;
+    · frame-src         pour le plan OpenStreetMap.
+  OpenStreetMap plutôt que Google Maps : pas de clé d'API, et pas de pistage
+  des invités par un tiers publicitaire.
+-->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'none';
+  script-src 'self';
+  style-src 'self';
+  img-src 'self' data:;
+  font-src 'self';
+  media-src 'self';
+  frame-src https://www.openstreetmap.org;
+  form-action 'none';
+  base-uri 'none'">
+
+<title>Alec &amp; Gloria — Invitation</title>
+<meta name="description" content="Alec et Gloria ont la joie de vous inviter à leur mariage.">
+<meta name="theme-color" content="#ece4d5">
+
+<!--
+  Open Graph : c'est l'aperçu affiché dans WhatsApp, iMessage et Signal.
+  Ces balises sont lues par des robots qui n'exécutent PAS de JavaScript :
+  elles ne peuvent pas venir de invitation.config.js et doivent être
+  mises à jour ici à la main, en même temps que la config.
+  L'URL de l'image doit être absolue — un chemin relatif n'est pas suivi.
+-->
+<meta property="og:type"        content="website">
+<meta property="og:locale"      content="fr_FR">
+<meta property="og:site_name"   content="Alec &amp; Gloria">
+<meta property="og:title"       content="Alec &amp; Gloria — 12 juin 2027">
+<meta property="og:description" content="Nous avons la joie de vous inviter à notre mariage.">
+<meta property="og:url"         content="https://harry-deg.github.io/guestbook/invitation.html">
+<meta property="og:image"       content="https://harry-deg.github.io/guestbook/assets/img/og.jpg">
+<meta property="og:image:width"  content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="Alec et Gloria devant le lieu de réception.">
+<meta name="twitter:card"       content="summary_large_image">
+
+<link rel="stylesheet" href="assets/css/invitation.css">
+</head>
+<body>
+
+<!-- ═══ Enveloppe ═══════════════════════════════════════════════════════ -->
+<div class="enveloppe papier" id="enveloppe">
+  <div class="enveloppe__corps">
+
+    <svg class="enveloppe__plis" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 30 L46 70"   stroke="#d8cbb2" stroke-width=".25" fill="none" vector-effect="non-scaling-stroke"/>
+      <path d="M100 30 L54 70" stroke="#d8cbb2" stroke-width=".25" fill="none" vector-effect="non-scaling-stroke"/>
+      <path d="M0 100 L46 72 Q50 69.5 54 72 L100 100" stroke="#ddd2bd" stroke-width=".25" fill="none" vector-effect="non-scaling-stroke"/>
+    </svg>
+
+    <!-- Rabat : bord inférieur incurvé vers le milieu de l'écran. -->
+    <div class="rabat">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="gRabat" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f3ecdd"/>
+            <stop offset="1" stop-color="#e7dcc6"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 0 H100 V60 Q50 105 0 60 Z" fill="url(#gRabat)"/>
+        <path d="M0 60 Q50 105 100 60" fill="none" stroke="#d2c3a4" stroke-width=".6" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </div>
+
+    <button class="sceau" id="sceau" type="button" aria-label="Ouvrir l&rsquo;invitation">
+      <span aria-hidden="true">A&amp;G</span>
+    </button>
+
+    <p class="enveloppe__appel label" id="texte-ouvrir">Toucher le sceau pour ouvrir</p>
+  </div>
+</div>
+
+<!-- ═══ Flottants ═══════════════════════════════════════════════════════ -->
+<button id="langue" class="flottant" type="button" aria-label="Switch to English">
+  <!-- Les deux drapeaux sont dans le balisage et l'on bascule leur visibilité :
+       la règle 6 du projet interdit innerHTML, y compris pour du SVG constant. -->
+  <svg width="16" height="11" viewBox="0 0 3 2" aria-hidden="true">
+    <g id="drapeau-fr">
+      <rect width="1" height="2" fill="#30479b"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#d8443d"/>
+    </g>
+    <g id="drapeau-en" hidden>
+      <rect width="3" height="2" fill="#24387a"/>
+      <path d="M0 0L3 2M3 0L0 2" stroke="#fff" stroke-width=".45"/>
+      <path d="M1.5 0V2M0 1H3" stroke="#fff" stroke-width=".6"/>
+      <path d="M1.5 0V2M0 1H3" stroke="#c8323a" stroke-width=".32"/>
+    </g>
+  </svg>
+  <span id="code-langue">FR</span><span aria-hidden="true">&#9662;</span>
+</button>
+
+<button id="musique" class="flottant" type="button" aria-label="Lancer la musique" aria-pressed="false" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/>
+    <g id="ondes"><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></g>
+    <g id="coupe" hidden><path d="M16 10l4 4M20 10l-4 4"/></g>
+  </svg>
+</button>
+
+<main class="feuille papier">
+
+  <!-- ═══ 1. Accueil ═══════════════════════════════════════════════════ -->
+  <section class="section accueil">
+    <div class="botanique b-hg"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8.4 -2.0 C17.5 7.1 26.7 16.7 20.2 24.0 C10.6 33.1 0.9 42.7 5.8 50.0 C10.9 59.1 16.0 68.7 10.9 76.0" stroke-width="1.05" opacity="0.85"/><path d="M12.8 7.8 Q25.1 3.2 37.3 -5.3" stroke-width="0.75" opacity="0.62"/><path d="M23.9 1.9 q4.2 -3.5 7.1 0.0 q-2.8 3.9 -7.1 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M31.2 -2.0 q4.2 -3.5 7.1 0.0 q-2.8 3.9 -7.1 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M17.3 17.5 Q9.3 14.9 1.0 10.1" stroke-width="0.75" opacity="0.62"/><path d="M9.9 14.1 q-2.8 -2.3 -4.6 0.0 q1.8 2.5 4.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M5.0 11.9 q-2.8 -2.3 -4.6 0.0 q1.8 2.5 4.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M18.4 27.2 Q29.1 22.6 38.9 13.8" stroke-width="0.75" opacity="0.62"/><path d="M27.6 21.2 q3.7 -3.1 6.2 0.0 q-2.5 3.4 -6.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M33.8 17.2 q3.7 -3.1 6.2 0.0 q-2.5 3.4 -6.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M13.0 37.0 Q5.1 33.8 -2.5 27.8" stroke-width="0.75" opacity="0.62"/><path d="M6.0 32.8 q-2.7 -2.3 -4.6 0.0 q1.8 2.5 4.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M1.4 30.1 q-2.7 -2.3 -4.6 0.0 q1.8 2.5 4.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M7.6 46.8 Q13.6 43.6 18.1 37.8" stroke-width="0.75" opacity="0.62"/><path d="M12.3 42.7 q2.1 -1.7 3.5 0.0 q-1.4 1.9 -3.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M15.5 40.0 q2.1 -1.7 3.5 0.0 q-1.4 1.9 -3.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M7.0 56.5 Q-2.2 53.9 -12.4 49.0" stroke-width="0.75" opacity="0.62"/><path d="M-1.7 53.1 q-3.2 -2.7 -5.4 0.0 q2.1 2.9 5.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M-7.5 50.9 q-3.2 -2.7 -5.4 0.0 q2.1 2.9 5.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M9.0 66.2 Q18.0 62.8 27.0 56.3" stroke-width="0.75" opacity="0.62"/><path d="M17.1 61.8 q3.1 -2.6 5.2 0.0 q-2.1 2.9 -5.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M22.5 58.8 q3.1 -2.6 5.2 0.0 q-2.1 2.9 -5.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><circle class="fleur" cx="34.6" cy="-3.3" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="37.8" cy="-6.2" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-0.0" cy="5.7" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-2.1" cy="14.2" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="3.5" cy="13.0" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="1.8" cy="13.8" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="41.6" cy="13.3" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="42.3" cy="10.2" r="1.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="36.3" cy="18.0" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="40.0" cy="12.1" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-3.3" cy="25.4" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="1.3" cy="23.5" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-1.5" cy="29.5" r="2.2" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-4.0" cy="28.1" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="21.1" cy="38.4" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="14.2" cy="41.0" r="2.6" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="14.4" cy="40.5" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="15.0" cy="35.9" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-10.0" cy="47.9" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-11.9" cy="52.8" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-14.8" cy="44.8" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-15.9" cy="49.3" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="23.9" cy="52.2" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="25.3" cy="60.4" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="25.9" cy="55.9" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/></svg></div>
+    <div class="botanique b-hd"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.5 -2.0 C19.8 7.1 29.1 16.7 26.7 24.0 C18.2 33.1 9.7 42.7 14.7 50.0 C24.2 59.1 33.8 68.7 25.7 76.0" stroke-width="1.05" opacity="0.85"/><path d="M16.6 7.8 Q26.7 2.5 34.6 -7.2" stroke-width="0.75" opacity="0.62"/><path d="M24.7 1.0 q3.5 -2.9 5.9 0.0 q-2.3 3.2 -5.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M30.1 -3.4 q3.5 -2.9 5.9 0.0 q-2.3 3.2 -5.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M22.6 17.5 Q10.1 9.7 3.7 -4.8" stroke-width="0.75" opacity="0.62"/><path d="M14.1 7.5 q-4.3 -3.6 -7.2 0.0 q2.9 4.0 7.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M8.4 0.8 q-4.3 -3.6 -7.2 0.0 q2.9 4.0 7.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M25.2 27.2 Q32.7 24.3 40.1 19.0" stroke-width="0.75" opacity="0.62"/><path d="M31.9 23.5 q2.6 -2.2 4.3 0.0 q-1.7 2.4 -4.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M36.4 21.0 q2.6 -2.2 4.3 0.0 q-1.7 2.4 -4.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M20.7 37.0 Q11.0 33.2 1.7 26.1" stroke-width="0.75" opacity="0.62"/><path d="M12.1 32.1 q-3.3 -2.8 -5.6 0.0 q2.2 3.1 5.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M6.4 28.8 q-3.3 -2.8 -5.6 0.0 q2.2 3.1 5.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M16.2 46.8 Q22.0 45.2 28.5 42.2" stroke-width="0.75" opacity="0.62"/><path d="M21.7 44.7 q2.0 -1.7 3.4 0.0 q-1.3 1.8 -3.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M25.4 43.4 q2.0 -1.7 3.4 0.0 q-1.3 1.8 -3.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M17.5 56.5 Q7.8 51.1 1.1 41.0" stroke-width="0.75" opacity="0.62"/><path d="M10.1 49.5 q-3.4 -2.8 -5.6 0.0 q2.2 3.1 5.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M5.2 44.9 q-3.4 -2.8 -5.6 0.0 q2.2 3.1 5.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M21.6 66.2 Q27.2 63.6 32.0 58.7" stroke-width="0.75" opacity="0.62"/><path d="M26.2 62.9 q1.9 -1.6 3.2 0.0 q-1.3 1.8 -3.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M29.4 60.6 q1.9 -1.6 3.2 0.0 q-1.3 1.8 -3.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><circle class="fleur" cx="31.0" cy="-8.9" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="37.4" cy="-5.4" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="5.8" cy="-3.5" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="6.7" cy="-8.8" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="7.1" cy="-3.9" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="2.1" cy="-4.0" r="1.6" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="41.6" cy="18.6" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="44.6" cy="23.4" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="1.8" cy="21.9" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-1.9" cy="22.6" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="24.0" cy="39.6" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="28.2" cy="46.6" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="24.6" cy="43.4" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="26.4" cy="38.5" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-2.2" cy="42.9" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="0.8" cy="40.9" r="2.2" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="34.4" cy="58.0" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="31.0" cy="63.2" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="35.2" cy="63.0" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="36.4" cy="54.4" r="1.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/></svg></div>
+    <div class="botanique b-bg"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13.9 102.0 C19.7 92.9 25.5 83.3 22.7 76.0 C17.6 66.9 12.4 57.3 15.4 50.0 C23.0 40.9 30.6 31.3 23.4 24.0" stroke-width="1.05" opacity="0.85"/><path d="M17.2 92.2 Q27.3 89.4 38.5 84.1" stroke-width="0.75" opacity="0.62"/><path d="M26.8 88.6 q3.5 -2.9 5.9 0.0 q-2.3 3.2 -5.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M33.2 86.2 q3.5 -2.9 5.9 0.0 q-2.3 3.2 -5.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M20.5 82.5 Q10.4 79.6 -0.6 74.3" stroke-width="0.75" opacity="0.62"/><path d="M11.0 78.8 q-3.5 -2.9 -5.8 0.0 q2.3 3.2 5.8 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M4.7 76.3 q-3.5 -2.9 -5.8 0.0 q2.3 3.2 5.8 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M21.8 72.8 Q32.7 69.1 44.0 62.2" stroke-width="0.75" opacity="0.62"/><path d="M31.8 68.0 q3.8 -3.1 6.3 0.0 q-2.5 3.5 -6.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M38.4 64.8 q3.8 -3.1 6.3 0.0 q-2.5 3.5 -6.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M19.1 63.0 Q11.9 60.6 4.4 56.0" stroke-width="0.75" opacity="0.62"/><path d="M12.5 59.9 q-2.5 -2.1 -4.1 0.0 q1.7 2.3 4.1 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M8.1 57.8 q-2.5 -2.1 -4.1 0.0 q1.7 2.3 4.1 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M16.3 53.2 Q22.1 50.5 27.1 45.4" stroke-width="0.75" opacity="0.62"/><path d="M21.2 49.7 q2.0 -1.7 3.4 0.0 q-1.4 1.9 -3.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M24.4 47.4 q2.0 -1.7 3.4 0.0 q-1.4 1.9 -3.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M17.4 43.5 Q9.5 38.8 4.9 30.1" stroke-width="0.75" opacity="0.62"/><path d="M11.8 37.5 q-2.7 -2.3 -4.5 0.0 q1.8 2.5 4.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M8.0 33.5 q-2.7 -2.3 -4.5 0.0 q1.8 2.5 4.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M20.4 33.8 Q28.4 30.6 36.2 24.8" stroke-width="0.75" opacity="0.62"/><path d="M27.5 29.7 q2.8 -2.3 4.6 0.0 q-1.8 2.5 -4.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M32.2 27.0 q2.8 -2.3 4.6 0.0 q-1.8 2.5 -4.6 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><circle class="fleur" cx="37.8" cy="81.8" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="34.5" cy="84.7" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="39.7" cy="84.9" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-4.7" cy="77.5" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="-3.8" cy="70.8" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="44.6" cy="59.4" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="45.9" cy="62.8" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="43.9" cy="62.5" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="43.7" cy="66.0" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="0.7" cy="54.2" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="3.0" cy="55.6" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="29.5" cy="42.3" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="23.0" cy="46.9" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="3.4" cy="28.8" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="7.6" cy="26.2" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="2.8" cy="31.9" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="40.6" cy="27.7" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="35.1" cy="26.3" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="35.8" cy="21.8" r="1.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="32.2" cy="27.2" r="1.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/></svg></div>
+    <div class="botanique b-bd"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18.1 102.0 C29.3 92.9 40.5 83.3 34.0 76.0 C25.1 66.9 16.2 57.3 22.3 50.0 C35.3 40.9 48.2 31.3 38.3 24.0" stroke-width="1.05" opacity="0.85"/><path d="M24.1 92.2 Q31.9 89.3 39.7 83.9" stroke-width="0.75" opacity="0.62"/><path d="M31.1 88.5 q2.7 -2.3 4.5 0.0 q-1.8 2.5 -4.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M35.8 86.0 q2.7 -2.3 4.5 0.0 q-1.8 2.5 -4.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M30.0 82.5 Q22.8 79.3 16.3 73.2" stroke-width="0.75" opacity="0.62"/><path d="M23.9 78.3 q-2.5 -2.1 -4.2 0.0 q1.7 2.3 4.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M19.8 75.5 q-2.5 -2.1 -4.2 0.0 q1.7 2.3 4.2 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M32.5 72.8 Q41.0 67.9 46.7 59.0" stroke-width="0.75" opacity="0.62"/><path d="M38.9 66.6 q3.0 -2.5 4.9 0.0 q-2.0 2.7 -4.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M43.2 62.5 q3.0 -2.5 4.9 0.0 q-2.0 2.7 -4.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M28.1 63.0 Q19.6 59.5 11.6 52.9" stroke-width="0.75" opacity="0.62"/><path d="M20.7 58.4 q-3.0 -2.5 -4.9 0.0 q2.0 2.7 4.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M15.7 55.4 q-3.0 -2.5 -4.9 0.0 q2.0 2.7 4.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M23.8 53.2 Q31.6 50.2 39.2 44.6" stroke-width="0.75" opacity="0.62"/><path d="M30.7 49.3 q2.7 -2.3 4.5 0.0 q-1.8 2.5 -4.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M35.4 46.7 q2.7 -2.3 4.5 0.0 q-1.8 2.5 -4.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M26.3 43.5 Q20.6 41.0 15.4 36.3" stroke-width="0.75" opacity="0.62"/><path d="M21.4 40.3 q-2.0 -1.7 -3.3 0.0 q1.3 1.8 3.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M18.1 38.1 q-2.0 -1.7 -3.3 0.0 q1.3 1.8 3.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M32.3 33.8 Q39.8 30.9 47.2 25.5" stroke-width="0.75" opacity="0.62"/><path d="M39.0 30.0 q2.6 -2.2 4.3 0.0 q-1.7 2.4 -4.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M43.5 27.6 q2.6 -2.2 4.3 0.0 q-1.7 2.4 -4.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><circle class="fleur" cx="39.0" cy="88.1" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="42.2" cy="87.5" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="40.8" cy="87.3" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="12.5" cy="69.6" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="17.0" cy="72.5" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="15.8" cy="77.6" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="16.4" cy="70.2" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="48.8" cy="61.7" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="43.5" cy="60.2" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="48.6" cy="54.6" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="46.6" cy="55.6" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="14.9" cy="56.4" r="1.6" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="7.3" cy="51.8" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="13.4" cy="50.7" r="1.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="9.6" cy="52.0" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="41.6" cy="40.8" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="43.4" cy="43.9" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="38.9" cy="44.1" r="2.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="36.3" cy="45.9" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="18.4" cy="33.6" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="19.9" cy="39.1" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="19.4" cy="33.2" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="51.1" cy="26.1" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="51.3" cy="22.9" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="43.2" cy="28.0" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="44.6" cy="22.8" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/></svg></div>
+
+    <div class="pile">
+      <p class="label" id="sur-titre">Nous avons la joie de vous inviter<br>à notre mariage</p>
+      <h1 class="prenoms" id="prenoms">
+        <span class="n1"></span><span class="et" aria-hidden="true">&amp;</span><span class="n2"></span>
+      </h1>
+      <div class="filet" aria-hidden="true"><span>&bull; &#9670; &bull;</span></div>
+      <p class="accueil__date" data-c="dateLongue"></p>
+      <p class="label"><span data-c="lieuNom"></span><br><span data-c="lieuVille"></span></p>
+    </div>
+  </section>
+
+  <!-- ═══ 2. Compte à rebours ══════════════════════════════════════════ -->
+  <section class="section">
+    <div class="cadre rv"><div class="cadre__g"><div class="cadre__f"><div class="cadre__in">
+      <div class="pile rebours">
+        <h2 class="script" data-t="rebours">Compte à rebours</h2>
+        <p class="label" data-t="reboursSous">Avant le plus beau jour de notre vie</p>
+        <div class="rebours__grille" role="timer">
+          <div><span class="rebours__nombre" id="cd-j">&mdash;</span><span class="label" data-t="jours">Jours</span></div>
+          <div><span class="rebours__nombre" id="cd-h">&mdash;</span><span class="label" data-t="heures">Heures</span></div>
+          <div><span class="rebours__nombre" id="cd-m">&mdash;</span><span class="label" data-t="minutes">Min</span></div>
+          <div><span class="rebours__nombre" id="cd-s">&mdash;</span><span class="label" data-t="secondes">Sec</span></div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </section>
+
+  <!-- ═══ 3. Le lieu ═══════════════════════════════════════════════════ -->
+  <section class="section lieu">
+    <div class="pile">
+      <p class="label rv" data-t="reception">La réception</p>
+      <h2 class="lieu__nom script rv d1" data-c="lieuNom"></h2>
+      <p class="label rv d1" data-c="lieuVille"></p>
+      <p class="lieu__quand rv d2" data-c="dateLongue"></p>
+      <p class="lieu__adresse rv d2"><span data-c="adresse1"></span><br><span data-c="adresse2"></span></p>
+
+      <div class="cadre carte-plan rv d3" id="bloc-carte">
+        <div class="cadre__g"><div class="cadre__f"><div class="cadre__in cadre__in--nu">
+          <iframe id="plan" title="Plan d&rsquo;accès au lieu de réception"
+                  loading="lazy" referrerpolicy="no-referrer"></iframe>
+        </div></div></div>
+      </div>
+
+      <div class="liens rv d3">
+        <a id="lien-itineraire" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z"/><circle cx="8" cy="6.5" r="1.8"/></svg>
+          <span class="label" data-t="itineraire">Itinéraire</span></a>
+        <button id="btn-ics" type="button">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>
+          <span class="label" data-t="calendrier">Ajouter au calendrier</span></button>
+      </div>
+      <p class="annonce-ics" id="annonce-ics" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ═══ 4. Bandeau « Le jour J » ═════════════════════════════════════ -->
+  <section class="section bande">
+    <div class="botanique"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12.5 -2.0 C23.0 7.1 33.4 16.7 31.0 24.0 C24.8 33.1 18.6 42.7 24.4 50.0 C36.0 59.1 47.5 68.7 39.0 76.0" stroke-width="1.05" opacity="0.85"/><path d="M19.4 7.8 Q28.7 2.4 34.6 -7.5" stroke-width="0.75" opacity="0.62"/><path d="M26.3 0.9 q3.2 -2.7 5.4 0.0 q-2.1 2.9 -5.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M30.8 -3.7 q3.2 -2.7 5.4 0.0 q-2.1 2.9 -5.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M26.4 17.5 Q16.1 13.0 6.8 4.7" stroke-width="0.75" opacity="0.62"/><path d="M17.6 11.7 q-3.6 -3.0 -5.9 0.0 q2.4 3.3 5.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M11.7 7.9 q-3.6 -3.0 -5.9 0.0 q2.4 3.3 5.9 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M30.2 27.2 Q40.1 21.9 47.3 12.0" stroke-width="0.75" opacity="0.62"/><path d="M37.9 20.4 q3.4 -2.9 5.7 0.0 q-2.3 3.2 -5.7 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M43.0 15.8 q3.4 -2.9 5.7 0.0 q-2.3 3.2 -5.7 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M27.7 37.0 Q16.6 31.2 8.1 20.5" stroke-width="0.75" opacity="0.62"/><path d="M18.9 29.6 q-3.9 -3.2 -6.4 0.0 q2.6 3.5 6.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M13.0 24.6 q-3.9 -3.2 -6.4 0.0 q2.6 3.5 6.4 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M25.3 46.8 Q34.7 43.5 44.5 37.6" stroke-width="0.75" opacity="0.62"/><path d="M33.9 42.6 q3.3 -2.7 5.5 0.0 q-2.2 3.0 -5.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M39.7 39.9 q3.3 -2.7 5.5 0.0 q-2.2 3.0 -5.5 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M28.1 56.5 Q20.0 53.3 12.0 47.4" stroke-width="0.75" opacity="0.62"/><path d="M20.8 52.4 q-2.8 -2.4 -4.7 0.0 q1.9 2.6 4.7 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M16.0 49.7 q-2.8 -2.4 -4.7 0.0 q1.9 2.6 4.7 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M33.6 66.2 Q40.9 63.2 47.9 57.4" stroke-width="0.75" opacity="0.62"/><path d="M40.0 62.3 q2.6 -2.1 4.3 0.0 q-1.7 2.3 -4.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><path d="M44.3 59.6 q2.6 -2.1 4.3 0.0 q-1.7 2.3 -4.3 0.0 Z" stroke-width="0.60" opacity="0.62" fill="currentColor" fill-opacity=".10"/><circle class="fleur" cx="32.4" cy="-9.9" r="2.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="36.7" cy="-6.3" r="2.2" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="9.0" cy="6.1" r="2.6" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="2.4" cy="9.0" r="2.1" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="4.6" cy="5.7" r="1.7" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="44.0" cy="16.2" r="2.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="51.0" cy="14.6" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="48.9" cy="8.2" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="44.1" cy="12.3" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="10.7" cy="19.1" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="7.4" cy="18.7" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="11.0" cy="19.1" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="47.9" cy="33.7" r="1.6" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="41.9" cy="39.7" r="2.0" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="43.0" cy="40.0" r="1.8" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="13.7" cy="43.7" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="10.0" cy="44.0" r="1.3" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="10.0" cy="50.9" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="12.4" cy="51.7" r="1.5" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="46.1" cy="58.5" r="1.4" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/><circle class="fleur" cx="48.5" cy="56.6" r="1.9" fill="currentColor" fill-opacity=".30" stroke-width=".5" opacity=".75"/></svg></div>
+    <div class="pile">
+      <h2 class="script rv" data-t="jourJ">Le jour J</h2>
+      <p class="label rv d1" data-c="dateLongue"></p>
+    </div>
+  </section>
+
+  <!-- ═══ 5. Programme ═════════════════════════════════════════════════ -->
+  <section class="section programme-section">
+    <div class="cadre"><div class="cadre__g"><div class="cadre__f"><div class="cadre__in">
+      <ul class="etapes" id="etapes"></ul>
+    </div></div></div></div>
+  </section>
+
+  <!-- ═══ 6. RSVP ══════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="pile" id="bloc-rsvp">
+      <div class="filet rv" aria-hidden="true"><span>&bull; &#9670; &bull;</span></div>
+      <p class="script rsvp__phrase rv d1" id="phrase-rsvp"></p>
+      <a class="bouton rv d2" id="lien-rsvp" href="index.html" data-t="rsvpBouton">Confirmer ma présence</a>
+      <p class="signature rv d3">A &amp; G</p>
+    </div>
+  </section>
+
+  <footer class="pied">
+    <p class="label" data-t="signature">Avec tout notre amour</p>
+  </footer>
+
+</main>
+
+<script type="module" src="assets/js/invitation.js"></script>
+</body>
+</html>

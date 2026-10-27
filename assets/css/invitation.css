@@ -1,0 +1,726 @@
+/* =====================================================================
+   invitation.css — page d'invitation immersive.
+
+   Colonne unique de 480 px, pensée pour l'iPhone en portrait (375–430 px)
+   et centrée au-delà. Papeterie de luxe : papier ivoire, filets taupe,
+   bandeau olive. Aucun rose.
+
+   Les polices sont auto-hébergées (voir `style.css`) : la CSP de cette
+   page porte `font-src 'self'`, et cela évite de donner l'adresse IP de
+   chaque invité à un tiers.
+
+   Toutes les encres sont calculées pour WCAG AA sur le fond le plus
+   sombre de la page — les tons sont doux, jamais au détriment du
+   contraste du texte.
+   ===================================================================== */
+
+@font-face {
+  font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 300;
+  font-display: swap; src: url('../fonts/cormorant-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400;
+  font-display: swap; src: url('../fonts/cormorant-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 400;
+  font-display: swap; src: url('../fonts/cormorant-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Jost'; font-style: normal; font-weight: 300;
+  font-display: swap; src: url('../fonts/jost-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Jost'; font-style: normal; font-weight: 400;
+  font-display: swap; src: url('../fonts/jost-400.woff2') format('woff2');
+}
+
+
+:root {
+  --papier:       #fdfcf9;
+  --papier-fonce: #f2ede3;
+  --creme:        #f7f3ea;
+  --beige:        #ece4d5;   /* enveloppe — fond le plus sombre */
+  --beige-ombre:  #ddd2bd;
+  --olive:        #4a4a3a;
+  --olive-texte:  #f4f0e6;   /* 7,91:1 sur olive */
+
+  --encre:   #4a4238;        /* titres            7,81:1 sur beige */
+  --encre-2: #6f6557;        /* texte courant     4,52:1 sur beige */
+  --trait:   #bfb39f;        /* filets décoratifs — pas un composant */
+  --botanique: #9d9079;
+
+  --f-titre: 'Cormorant Garamond', Cormorant, Garamond, 'Times New Roman', serif;
+  --f-label: 'Jost', 'Futura', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+
+  --col: 480px;
+  --biseau: 14px;
+  --tactile: 44px;
+
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--papier-fonce); }
+
+body {
+  margin: 0;
+  background: var(--papier-fonce);
+  color: var(--encre-2);
+  font-family: var(--f-titre);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Tant que l'enveloppe n'est pas ouverte, la page ne défile pas. */
+body.verrouille { overflow: hidden; height: 100%; }
+
+img, svg { max-width: 100%; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+
+
+/* ── Grain du papier ──────────────────────────────────────────────── */
+
+.papier { position: relative; }
+
+.papier::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .26;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .48 0 0 0 0 .44 0 0 0 0 .36 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+
+/* ── Typographie ──────────────────────────────────────────────────── */
+
+.label {
+  font-family: var(--f-label);
+  font-weight: 300;
+  font-size: 10.5px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--encre-2);
+  line-height: 2;
+}
+
+.script {
+  font-family: var(--f-titre);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--encre);
+  letter-spacing: .01em;
+}
+
+/* L'attribut `hidden` n'est pas honoré par le navigateur sur les éléments SVG :
+   sans cette règle, les deux drapeaux se superposaient et l'anglais, dessiné en
+   second, masquait le français. */
+svg [hidden] { display: none; }
+
+.masque {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+
+/* ── Structure ────────────────────────────────────────────────────── */
+
+.feuille {
+  position: relative;
+  max-width: var(--col);
+  margin-inline: auto;
+  background: var(--papier);
+  box-shadow: 0 0 60px rgba(74, 66, 56, .12);
+}
+
+.section {
+  position: relative;
+  z-index: 2;
+  padding-block: 66px;
+  padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px));
+  text-align: center;
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+
+/* ── Séparateurs ──────────────────────────────────────────────────── */
+
+.filet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 220px;
+  margin-inline: auto;
+  color: var(--trait);
+}
+
+.filet::before, .filet::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--trait);
+}
+
+.filet span { font-size: 9px; letter-spacing: .5em; padding-left: .5em; }
+
+.losange {
+  width: 6px; height: 6px;
+  background: var(--trait);
+  transform: rotate(45deg);
+  margin-inline: auto;
+}
+
+
+/* ── Cadre papier : coins biseautés, double filet ─────────────────── */
+/* Quatre niveaux imbriqués portant le même clip-path : c'est ce qui fait
+   suivre le biseau à tous les filets. Une seule boîte avec `outline`
+   donnerait des coins carrés. */
+
+.cadre {
+  --b: var(--biseau);
+  background: var(--trait);
+  padding: 1px;
+  clip-path: polygon(
+    var(--b) 0, calc(100% - var(--b)) 0,
+    100% var(--b), 100% calc(100% - var(--b)),
+    calc(100% - var(--b)) 100%, var(--b) 100%,
+    0 calc(100% - var(--b)), 0 var(--b));
+}
+
+.cadre__g  { background: var(--papier); padding: 5px; clip-path: inherit; }
+.cadre__f  { background: var(--trait);  padding: 1px; clip-path: inherit; opacity: .999; }
+.cadre__in { background: var(--papier); padding: 36px 22px; clip-path: inherit; }
+
+.cadre__in--nu { padding: 0; }
+
+
+/* ── Apparitions au défilement ────────────────────────────────────── */
+
+.js .rv {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 1.2s cubic-bezier(.22, .7, .2, 1),
+              transform 1.2s cubic-bezier(.22, .7, .2, 1);
+}
+
+.js .rv.vu { opacity: 1; transform: none; }
+
+.rv.d1 { transition-delay: .15s; }
+.rv.d2 { transition-delay: .3s; }
+.rv.d3 { transition-delay: .45s; }
+
+
+/* ── Enveloppe ────────────────────────────────────────────────────── */
+
+.enveloppe {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  background: var(--beige);
+  overflow: hidden;
+  /* La disparition attend que le rabat ait fini de s'ouvrir. */
+  transition: opacity 1s ease .85s, visibility 0s linear 1.9s;
+}
+
+.enveloppe.ouverte {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.enveloppe__corps {
+  position: relative;
+  width: 100%;
+  max-width: var(--col);
+  height: 100%;
+  perspective: 1400px;
+}
+
+/* Plis du dos de l'enveloppe : deux diagonales et le pli inférieur. */
+.enveloppe__plis {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+}
+
+/* Rabat triangulaire à bord inférieur incurvé, qui bascule vers le haut. */
+.rabat {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 60%;
+  z-index: 2;
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+  transition: transform 1.3s cubic-bezier(.55, .05, .3, 1) .22s;
+  filter: drop-shadow(0 6px 10px rgba(120, 104, 74, .2));
+}
+
+.rabat svg { display: block; width: 100%; height: 100%; }
+
+.enveloppe.ouverte .rabat { transform: rotateX(178deg); }
+
+/* Sceau de cire : bord volontairement irrégulier, relief par ombres
+   internes. Ton sur ton, crème légèrement nacrée. */
+.sceau {
+  position: absolute;
+  left: 50%; top: 49.5%;
+  z-index: 3;
+  width: 78px; height: 78px;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  border-radius: 47% 53% 50% 50% / 52% 46% 54% 48%;
+  background: radial-gradient(circle at 38% 32%, #fbf6ea 0%, #e8dcc3 44%, #cdbe9e 100%);
+  box-shadow:
+    0 3px 7px rgba(120, 100, 64, .3),
+    inset 0 -3px 6px rgba(140, 118, 78, .32),
+    inset 0 3px 5px rgba(255, 252, 240, .75);
+  animation: battement 2.8s ease-in-out infinite;
+  transition: transform .9s ease, opacity .7s ease;
+}
+
+.sceau::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 3px rgba(130, 110, 70, .4), 0 1px 0 rgba(255, 252, 242, .6);
+}
+
+.sceau span {
+  position: relative;
+  font-family: var(--f-titre);
+  font-style: italic;
+  font-size: 19px;
+  letter-spacing: .02em;
+  color: #8d7c58;
+  text-shadow: 0 1px 0 rgba(255, 252, 242, .85), 0 -1px 0 rgba(130, 108, 66, .3);
+}
+
+@keyframes battement {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.04); }
+}
+
+.enveloppe.ouverte .sceau {
+  animation: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.enveloppe__appel {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  z-index: 3;
+  text-align: center;
+  color: var(--encre-2);
+  transition: opacity .5s;
+}
+
+.enveloppe.ouverte .enveloppe__appel { opacity: 0; }
+
+
+/* ── Boutons flottants ────────────────────────────────────────────── */
+
+.flottant {
+  position: fixed;
+  z-index: 40;
+  border: 0;
+  cursor: pointer;
+  color: var(--encre);
+  background: rgba(247, 243, 234, .82);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(74, 66, 56, .14);
+}
+
+#musique {
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  width: var(--tactile); height: var(--tactile);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+#musique svg { width: 20px; height: 20px; }
+
+#langue {
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--f-label);
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  color: var(--encre);
+}
+
+/* Au-delà de la colonne, les flottants restent collés à la feuille. */
+@media (min-width: 520px) {
+  #musique { right: calc(50% - var(--col) / 2 + 18px); }
+  #langue  { right: calc(50% - var(--col) / 2 + 14px); }
+}
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 3px;
+}
+
+.bande :where(a, button):focus-visible { outline-color: var(--olive-texte); }
+
+
+/* ── Botaniques ───────────────────────────────────────────────────── */
+
+.botanique {
+  position: absolute;
+  pointer-events: none;
+  color: var(--botanique);
+  z-index: 1;
+}
+
+.botanique svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.b-hg { left: -14px; top: -8px;    width: 44%; height: 34%; }
+.b-hd { right: -14px; top: -8px;   width: 44%; height: 34%; transform: scaleX(-1); }
+.b-bg { left: -10px; bottom: -6px; width: 52%; height: 42%; }
+.b-bd { right: -10px; bottom: -6px; width: 52%; height: 42%; transform: scaleX(-1); }
+
+/* Les tiges « poussent » : le tracé se dessine, les fleurs éclosent après.
+   Les longueurs de tracé sont posées par invitation.js (getTotalLength). */
+.js .botanique path {
+  stroke-dashoffset: var(--len, 0);
+  stroke-dasharray: var(--len, 0);
+}
+
+.js body.ouvert .botanique path,
+.js .ouvert .botanique path {
+  transition: stroke-dashoffset 3s cubic-bezier(.3, .6, .2, 1) var(--dl, 0s);
+  stroke-dashoffset: 0;
+}
+
+.js .botanique .fleur { opacity: 0; transform: scale(.3); transform-box: fill-box; transform-origin: center; }
+
+.js .ouvert .botanique .fleur {
+  transition: opacity 1.1s ease var(--dl, 0s), transform 1.1s ease var(--dl, 0s);
+  opacity: .75;
+  transform: none;
+}
+
+
+/* ── 1. Accueil ───────────────────────────────────────────────────── */
+
+.accueil {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 112px 100px;
+  overflow: hidden;
+}
+
+.prenoms {
+  font-family: var(--f-titre);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--encre);
+  font-size: clamp(60px, 18vw, 84px);
+  line-height: .96;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.prenoms .et {
+  font-size: .40em;
+  line-height: 1.4;
+  color: var(--encre-2);
+}
+
+/* Révélation lettre par lettre : chaque caractère est enveloppé par le JS. */
+.js .prenoms .car {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(5px);
+  transform: translateY(6px);
+}
+
+.js .ouvert .prenoms .car {
+  animation: encre 1.1s ease forwards;
+  animation-delay: calc(1.1s + var(--i) * .085s);
+}
+
+@keyframes encre { to { opacity: 1; filter: none; transform: none; } }
+
+.accueil__date {
+  font-size: 21px;
+  letter-spacing: .13em;
+  color: var(--encre);
+}
+
+
+/* ── 2. Compte à rebours ──────────────────────────────────────────── */
+
+.rebours h2 { font-size: 42px; line-height: 1.05; }
+
+.rebours__grille {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 22px;
+  width: 100%;
+}
+
+.rebours__grille > div {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.rebours__grille > div + div::before {
+  content: "";
+  position: absolute;
+  left: -2px; top: 8px; bottom: 20px;
+  width: 1px;
+  background: var(--trait);
+}
+
+.rebours__nombre {
+  font-family: var(--f-titre);
+  font-weight: 300;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--encre);
+  font-variant-numeric: tabular-nums;
+}
+
+.rebours .label { font-size: 9px; letter-spacing: .22em; }
+
+
+/* ── 3. Le lieu ───────────────────────────────────────────────────── */
+
+.lieu__nom { font-size: 40px; line-height: 1.08; }
+.lieu__quand { font-style: italic; font-size: 20px; color: var(--encre); }
+.lieu__adresse { font-size: 14.5px; line-height: 1.55; }
+
+.carte-plan { width: 100%; margin-top: 12px; }
+
+.carte-plan iframe {
+  display: block;
+  width: 100%;
+  height: 230px;
+  border: 0;
+  /* Harmonise le plan avec le papier sans le rendre illisible. */
+  filter: sepia(.22) saturate(.78) brightness(1.02);
+}
+
+.liens {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 18px;
+  margin-top: 10px;
+}
+
+/* « Ajouter au calendrier » est long : à 390 px, l'interlettrage de 0,3em
+   faisait passer les deux liens l'un sous l'autre. On le resserre ici
+   uniquement, pour qu'ils restent côte à côte comme prévu. */
+.liens .label { letter-spacing: .18em; }
+
+.liens a, .liens button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tactile);
+  padding: 0 .3rem;
+  background: none;
+  border: 0;
+  color: var(--encre);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.liens svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.3; }
+
+.annonce-ics {
+  min-height: 1.3em;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--encre-2);
+}
+
+
+/* ── 4. Bandeau « Le jour J » ─────────────────────────────────────── */
+
+.bande {
+  position: relative;
+  background: var(--olive);
+  color: var(--olive-texte);
+  padding-block: 82px 126px;
+  overflow: hidden;
+}
+
+.bande .script { color: var(--olive-texte); font-size: 52px; line-height: 1.05; }
+.bande .label  { color: var(--olive-texte); opacity: .85; }
+
+/* Gypsophile claire qui déborde en haut à gauche du bandeau. */
+.bande .botanique {
+  color: var(--olive-texte);
+  opacity: .5;
+  left: -16px; top: -14px;
+  width: 48%; height: 118%;
+}
+
+
+/* ── 5. Programme ─────────────────────────────────────────────────── */
+/* La carte chevauche le bandeau olive : c'est le point d'articulation
+   visuel de la page. */
+
+.programme-section {
+  margin-top: -92px;
+  padding-top: 0;
+  z-index: 3;
+}
+
+.programme-section .cadre__in { padding: 42px 22px 38px; }
+
+.etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  margin: 0; padding: 0;
+  list-style: none;
+}
+
+.etape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+}
+
+.etape + .etape::before {
+  content: "";
+  width: 6px; height: 6px;
+  margin-bottom: 20px;
+  background: var(--trait);
+  transform: rotate(45deg);
+}
+
+.etape__heure {
+  font-family: var(--f-titre);
+  font-weight: 300;
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: .06em;
+  color: var(--encre);
+  font-variant-numeric: tabular-nums;
+}
+
+.etape__titre {
+  font-family: var(--f-label);
+  font-weight: 300;
+  font-size: 10.5px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--encre);
+}
+
+.etape__texte {
+  font-style: italic;
+  font-size: 15.5px;
+  line-height: 1.5;
+  max-width: 30ch;
+  margin-inline: auto;
+}
+
+
+/* ── 6. RSVP ──────────────────────────────────────────────────────── */
+
+.rsvp__phrase { font-size: 25px; line-height: 1.35; max-width: 24ch; }
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 34px;
+  background: none;
+  border: 1px solid var(--encre);
+  color: var(--encre);
+  font-family: var(--f-label);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background .4s, color .4s;
+}
+
+.bouton:hover, .bouton:focus-visible {
+  background: var(--encre);
+  color: var(--papier);
+}
+
+.signature {
+  font-family: var(--f-titre);
+  font-style: italic;
+  font-size: 30px;
+  color: var(--encre);
+}
+
+/* Le pied fait partie de la feuille : hors d'elle, il flottait sur le
+   pourtour plus sombre et la colonne semblait s'arrêter trop tôt. */
+.pied {
+  position: relative;
+  z-index: 2;
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: 0 24px 58px;
+  background: var(--papier);
+  text-align: center;
+}
+
+
+/* ── Mouvement réduit ─────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .js .rv { opacity: 1; transform: none; }
+  .js .prenoms .car { opacity: 1; filter: none; transform: none; animation: none; }
+  .js .botanique path { stroke-dashoffset: 0; }
+  .js .botanique .fleur { opacity: .75; transform: none; }
+}

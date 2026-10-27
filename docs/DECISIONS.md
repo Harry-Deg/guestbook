@@ -349,3 +349,36 @@ et `font-src 'self'` — un appel à Google Fonts serait **bloqué**, et l'assou
 deux polices affaiblirait la seule protection XSS du site. Un tiers verrait l'adresse IP
 de chaque invité ouvrant l'invitation. Et l'affichage ne dépend plus d'un service
 extérieur. Les deux familles sont sous licence SIL OFL, qui autorise la redistribution.
+
+## 2026-10-27 — D35 · Papeterie blanc ivoire, pas rose
+**Décision** : toute la papeterie passe du rose poudré au **blanc cassé et beige**
+(`#fdfcf9` pour le papier, `#f7f3ea` pour les encadrés, `#ece4d5` pour l'enveloppe),
+le bandeau restant olive `#4a4a3a`. Les encres ont été recalculées sur le beige, le
+fond le plus sombre : titres 7,81:1, texte courant 4,52:1, bordures de champ 3,04:1.
+**Pourquoi** : demande explicite de Harry, répétée et prioritaire sur toute autre
+indication de la commande d'origine. Accessoirement, le blanc ivoire s'accorde mieux
+à la photo retenue — pierre ocre, pelouse, costume marine — que le rose, qui tirait
+l'ensemble vers une dominante froide.
+
+## 2026-10-27 — D36 · L'invitation est une page distincte du RSVP
+**Décision** : `invitation.html` est une page à part entière, avec sa feuille de style,
+son script et sa configuration. Elle ne partage avec le site RSVP que les polices et
+les images. Elle renvoie vers `index.html` par son bouton « Confirmer ma présence » ;
+`index.html` y renvoie par un lien discret « Revoir l'invitation ».
+**Pourquoi** : les deux pages n'ont ni le même public au même moment, ni les mêmes
+besoins techniques. L'invitation est ce qu'on ouvre depuis WhatsApp — elle doit être
+immersive, et elle a besoin d'un lecteur audio et d'un cadre de carte. Le RSVP est un
+formulaire qui manipule un jeton de session. Les mêler aurait imposé la CSP la plus
+permissive des deux à la page qui porte les données.
+**Conséquence sur la CSP** : la page d'invitation ajoute `media-src 'self'` et
+`frame-src https://www.openstreetmap.org`, et n'a **aucun** `connect-src` — elle
+n'appelle aucune API. La page RSVP, elle, garde sa CSP inchangée.
+
+## 2026-10-27 — D37 · OpenStreetMap plutôt que Google Maps
+**Décision** : le plan est un cadre OpenStreetMap, paramétré par un cadrage
+(`bbox`) et un marqueur dans `invitation.config.js`. Le lien « Itinéraire », lui,
+ouvre Google Maps — qui gère mieux le passage à l'application native du téléphone.
+**Pourquoi** : un cadre Google Maps dépose des traceurs chez chaque invité qui ouvre
+l'invitation, et demande une clé d'API à gérer. OpenStreetMap n'exige ni l'un ni
+l'autre. Le lien d'itinéraire est un choix délibéré de l'invité, pas un chargement
+subi : Google y est acceptable, et plus utile.

@@ -61,24 +61,26 @@
 :root {
   /* Papier. Un seul fond dans toute la page : les cartes se distinguent
      par leurs filets, pas par leur couleur — c'est ce qui fait papeterie
-     plutôt qu'interface. */
-  --rose:        #f1d2d4;
-  --rose-profond:#ecc6c9;   /* pourtour, hors colonne */
-  --creme:       #f6e6e2;
-  --olive:       #4b4a3b;
+     plutôt qu'interface. Blanc cassé et beige, jamais de rose (D35). */
+  --papier:       #fdfcf9;   /* fond de la colonne */
+  --papier-fonce: #f2ede3;   /* pourtour, hors colonne */
+  --creme:        #f7f3ea;   /* fond des champs et des encadrés */
+  --beige:        #ece4d5;   /* le fond le plus sombre : sert de référence */
+  --olive:        #4a4a3a;
 
-  /* Encres. Ratios mesurés sur --rose, le fond le plus sombre. */
-  --encre:       #4e403c;   /* titres          7,02:1 */
-  --encre-2:     #6b5c58;   /* texte courant   4,52:1 — minimum AA */
-  --bord:        #9c7067;   /* bordure de champ 3,03:1 — AA 1.4.11 */
-  --erreur:      #a73a32;   /*                 4,53:1 */
-  --succes:      #2f6a49;   /*                 4,55:1 */
+  /* Encres. Ratios mesurés sur --beige, le fond le plus sombre : elles sont
+     donc conformes aussi sur --creme et sur --papier. */
+  --encre:       #4a4238;   /* titres           7,81:1 */
+  --encre-2:     #6f6557;   /* texte courant    4,52:1 */
+  --bord:        #908069;   /* bordure de champ 3,04:1 — AA 1.4.11 */
+  --erreur:      #a33a30;   /*                  5,19:1 */
+  --succes:      #3a6345;   /*                  5,45:1 */
 
   /* Filets purement décoratifs : cadres, séparateurs, losanges. Ils ne
      véhiculent aucune information et ne sont la bordure d'aucun composant
      interactif — WCAG 1.4.11 ne s'y applique pas, ils peuvent rester fins. */
-  --trait:       #b89892;
-  --trait-clair: #cfb0ab;
+  --trait:       #bfb39f;
+  --trait-clair: #d6cdbb;
 
   --f-titre:  'Cormorant Garamond', Cormorant, Garamond, 'Times New Roman', serif;
   --f-label:  'Jost', 'Futura', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
@@ -92,11 +94,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { background: var(--rose-profond); }
+html { background: var(--papier-fonce); }
 
 body {
   margin: 0;
-  background: var(--rose-profond);
+  background: var(--papier-fonce);
   color: var(--encre-2);
   font-family: var(--f-titre);
   font-size: 17px;
@@ -123,7 +125,7 @@ img { max-width: 100%; height: auto; display: block; }
   z-index: 1;
   opacity: .3;
   mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .42 0 0 0 0 .4 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .48 0 0 0 0 .44 0 0 0 0 .36 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 
@@ -132,7 +134,7 @@ img { max-width: 100%; height: auto; display: block; }
 .page {
   max-width: var(--col);
   margin-inline: auto;
-  background: var(--rose);
+  background: var(--papier);
   box-shadow: 0 0 60px rgba(78, 64, 60, .13);
   position: relative;
   /* La colonne de papier va jusqu'en bas de l'écran : sans cela, les écrans
@@ -265,9 +267,9 @@ h1, h2, h3, p { margin: 0; text-wrap: balance; }
     0 calc(100% - var(--b)), 0 var(--b));
 }
 
-.carte__gouttiere { background: var(--rose); padding: 5px;  clip-path: inherit; }
+.carte__gouttiere { background: var(--papier); padding: 5px;  clip-path: inherit; }
 .carte__filet     { background: var(--trait-clair); padding: 1px; clip-path: inherit; }
-.carte__in        { background: var(--rose); padding: 32px 22px; clip-path: inherit; }
+.carte__in        { background: var(--papier); padding: 32px 22px; clip-path: inherit; }
 
 .carte + .carte { margin-top: 26px; }
 
@@ -304,7 +306,7 @@ h1, h2, h3, p { margin: 0; text-wrap: balance; }
   z-index: 60;
   padding: .75rem 1.25rem;
   background: var(--encre);
-  color: var(--rose);
+  color: var(--papier);
   font-family: var(--f-label);
   font-size: 11px;
   letter-spacing: .2em;
@@ -352,7 +354,7 @@ h1, h2, h3, p { margin: 0; text-wrap: balance; }
   aspect-ratio: 860 / 1174;
   object-fit: cover;
   /* La photo est chaude (pierre ocre, pelouse) ; une très légère
-     désaturation la fait tenir avec le rose sans la délaver. */
+     désaturation la fait tenir avec le papier sans la délaver. */
   filter: saturate(.92) contrast(1.02);
 }
 
@@ -365,17 +367,17 @@ h1, h2, h3, p { margin: 0; text-wrap: balance; }
 
 /* Il doit être franc : le premier prénom déborde sur la photo, et il tombait
    sur la pelouse — texte foncé sur vert clair, sous le seuil AA. Le bas de
-   l'image est ramené au rose plein avant que le texte n'arrive. */
+   l'image est ramené au papier plein avant que le texte n'arrive. */
 .bandeau__fondu {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: 30%;
   pointer-events: none;
   background: linear-gradient(to bottom,
-    rgba(241, 210, 212, 0)   0%,
-    rgba(241, 210, 212, .28) 44%,
-    rgba(241, 210, 212, .88) 76%,
-    var(--rose)              94%);
+    rgba(253, 252, 249, 0)   0%,
+    rgba(253, 252, 249, .28) 44%,
+    rgba(253, 252, 249, .88) 76%,
+    var(--papier)              94%);
 }
 
 .bandeau__texte {
@@ -553,7 +555,7 @@ h1, h2, h3, p { margin: 0; text-wrap: balance; }
 .bouton:hover,
 .bouton:focus-visible {
   background: var(--encre);
-  color: var(--rose);
+  color: var(--papier);
 }
 
 .bouton[disabled] {
@@ -803,7 +805,7 @@ textarea[aria-invalid="true"] {
 .choix-presence input:checked + span {
   background: var(--encre);
   border-color: var(--encre);
-  color: var(--rose);
+  color: var(--papier);
 }
 
 .choix-presence input:focus-visible + span {

@@ -9,6 +9,17 @@ sans mot de passe : un code à 6 chiffres reçu par email suffit.
 
 > **Dépôt public** : il ne contient ni secret, ni adresse email réelle, ni donnée d'invité.
 
+## Les deux pages
+
+| Page | Rôle |
+|---|---|
+| [`invitation.html`](invitation.html) | **Le lien qu'on envoie aux invités** par WhatsApp ou SMS. Enveloppe à ouvrir, faire-part, compte à rebours, plan, programme. Renvoie vers le RSVP. |
+| [`index.html`](index.html) | Connexion par code et formulaire de réponse. |
+
+Tout le contenu de l'invitation (noms, date, lieu, horaires, textes FR et EN) est dans
+[`assets/js/invitation.config.js`](assets/js/invitation.config.js) — un seul fichier à
+modifier, sans toucher au HTML.
+
 ## Documentation
 
 | Fichier | Contenu |

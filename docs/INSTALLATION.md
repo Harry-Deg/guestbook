@@ -539,3 +539,62 @@ Surveiller l'onglet `Journal`, en filtrant la colonne `resultat` :
 - [ ] Le parcours complet fonctionne sur l'URL publique, depuis un téléphone.
 - [ ] Les mariés ont le classeur et le guide.
 - [ ] Une sauvegarde Excel existe.
+
+---
+
+## La page d'invitation
+
+`invitation.html` est la page que les invités ouvrent en premier, depuis le lien reçu
+par WhatsApp ou SMS. Elle ne touche à rien du RSVP : elle y renvoie par un bouton.
+
+### Ce qu'il faut compléter
+
+Tout est dans **`assets/js/invitation.config.js`**, et nulle part ailleurs. Les lignes
+à remplir portent toutes la mention `À COMPLÉTER` :
+
+| Clé | Quoi |
+|---|---|
+| `dateISO` | date et heure du mariage, avec le fuseau. Doit concorder avec `DATE_MARIAGE` dans le classeur |
+| `lieuNom`, `lieuVille` | le domaine et sa ville |
+| `adresse1`, `adresse2` | l'adresse postale, sur deux lignes |
+| `carte.cadre`, `carte.marqueur` | relevés sur openstreetmap.org → **Partager → Intégrer une carte**. Mettez `carte: null` pour retirer le plan |
+| `dateLimite` | la date limite de réponse, en français et en anglais |
+| `programme` | les étapes de la journée, avec leurs textes FR et EN |
+
+### Trois choses qui ne sont pas dans la config
+
+**La musique.** Déposez un fichier dans `assets/music.mp3`. **Tant qu'il n'existe pas,
+le bouton de musique ne s'affiche pas** — la page reste complète et silencieuse. Vérifiez
+que vous avez le droit de diffuser le morceau : une page publique n'est pas un usage privé.
+
+**L'aperçu WhatsApp.** Les balises Open Graph sont en haut d'`invitation.html`. Elles
+sont lues par des robots qui n'exécutent pas de JavaScript : elles ne peuvent donc pas
+venir de la config et sont à **mettre à jour à la main**, en même temps qu'elle.
+Trois valeurs à corriger : `og:title` (qui contient la date), `og:url` et `og:image`,
+dont l'URL doit être **absolue** — un chemin relatif n'est pas suivi par WhatsApp.
+
+**L'image d'aperçu** `assets/img/og.jpg` (1200×630) est découpée de la photo du couple.
+Pour la refaire à partir d'une autre photo, gardez ces dimensions exactes.
+
+### Tester en local
+
+```bash
+python3 -m http.server 8000
+```
+
+puis <http://localhost:8000/invitation.html>. À vérifier, dans cet ordre :
+
+- [ ] L'enveloppe s'affiche, le sceau bat doucement, **la page ne défile pas**.
+- [ ] Un toucher sur le sceau : il s'estompe, le rabat s'ouvre vers le haut, la page
+      apparaît en fondu. La musique démarre **si** le fichier existe.
+- [ ] Les branchages se dessinent, les prénoms apparaissent lettre par lettre.
+- [ ] Le compte à rebours avance chaque seconde.
+- [ ] **Le plan s'affiche** — il ne se charge pas dans un navigateur sans interface,
+      il faut donc le vérifier pour de vrai.
+- [ ] « Itinéraire » ouvre le plan du téléphone, « Ajouter au calendrier » télécharge
+      un `.ics` qui s'ouvre dans l'agenda.
+- [ ] Le bouton `FR ▾` bascule toute la page en anglais, et le choix survit au rechargement.
+- [ ] « Confirmer ma présence » mène bien au formulaire de réponse.
+- [ ] Sur iPhone : aucun défilement horizontal, rien à moins de 44 px.
+- [ ] Dans Réglages → Accessibilité → **Réduire les animations** : plus aucune
+      animation, et tout reste lisible.
