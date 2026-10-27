@@ -313,3 +313,39 @@ plage) aurait demandé deux modifications dans deux fichiers — et l'oubli de l
 n'aurait produit **aucune erreur**, juste une invitation incomplète envoyée à 150 personnes.
 **Règle générale** : un champ renvoyé par l'API et jamais lu par le front est un défaut en
 attente, pas une réserve pour plus tard.
+
+## 2026-10-27 — D32 · Habillage « papeterie », d'après la maquette de Harry
+**Décision** : l'interface reprend le langage visuel de `invitation-alec-gloria.html`
+fourni par Harry — colonne unique de 480 px, papier rose poudré, grain de papier,
+cadres à coins biseautés et double filet, Cormorant Garamond en italique pour les
+titres, Jost en capitales très espacées pour les intitulés, séparateurs `• ◆ •`.
+La photo `photo4.png` ouvre la page et se fond dans le papier par un dégradé.
+**Reprise, pas copie** : l'enveloppe à sceau de la maquette n'est pas reprise — elle
+bloque tout l'écran avant d'accéder au RSVP, ce qui est acceptable pour une invitation
+mais pas pour un formulaire que des invités âgés doivent remplir. Le compte à rebours
+et les apparitions au défilement sont repris, tous deux facultatifs et désarmés si
+leur support manque.
+
+## 2026-10-27 — D33 · Les encres de la maquette sont réassombries pour le contraste
+**Décision** : la palette de la maquette est conservée en teinte, mais ses encres sont
+descendues en luminosité jusqu'aux seuils WCAG AA. Texte courant `#8d7a75` → `#6b5c58`,
+titres `#6b5853` → `#4e403c`, bordures de champ `#b89892` → `#9c7067`.
+**Pourquoi** : mesurés sur le rose `#f1d2d4`, les originaux donnent **2,88:1** pour le
+texte courant (minimum 4,5:1) et **1,88:1** pour les bordures de champ (minimum 3:1,
+WCAG 1.4.11). Acceptable sur un faire-part, qui est décoratif et bref ; pas sur un
+formulaire que des grands-parents doivent remplir sur un téléphone. C'est exactement
+le défaut trouvé en P3 sur `--couleur-bordure-forte`, et la règle alors retenue —
+ne jamais éclaircir sans refaire le calcul — s'applique ici.
+**Nuance** : les filets purement décoratifs (cadres, séparateurs, losanges) gardent la
+valeur claire d'origine `#b89892`. Ils ne véhiculent aucune information et ne bordent
+aucun composant interactif : WCAG 1.4.11 ne s'y applique pas. C'est ce qui permet de
+garder la finesse de la papeterie là où elle est purement graphique.
+
+## 2026-10-27 — D34 · Les polices sont auto-hébergées, pas chargées depuis Google
+**Décision** : Cormorant Garamond et Jost sont servies depuis `assets/fonts/`
+(sous-ensemble latin, 5 graisses, 156 Ko au total) et non depuis `fonts.googleapis.com`.
+**Pourquoi** : trois raisons qui vont dans le même sens. La CSP porte `style-src 'self'`
+et `font-src 'self'` — un appel à Google Fonts serait **bloqué**, et l'assouplir pour
+deux polices affaiblirait la seule protection XSS du site. Un tiers verrait l'adresse IP
+de chaque invité ouvrant l'invitation. Et l'affichage ne dépend plus d'un service
+extérieur. Les deux familles sont sous licence SIL OFL, qui autorise la redistribution.

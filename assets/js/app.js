@@ -724,9 +724,71 @@ function preparerMerci() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Habillage : apparitions au défilement et compte à rebours
+
+   Les deux sont purement décoratifs et entièrement facultatifs. Chacun se
+   désarme tout seul si son support manque, et la page reste complète et
+   lisible sans eux — c'est la règle pour tout ce qui n'est pas le RSVP.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Révèle les blocs `.rv` quand ils entrent dans le champ de vision.
+ *
+ * La classe `js` n'est posée QUE si l'observateur existe : c'est elle qui rend
+ * les blocs invisibles au départ (voir `style.css`). Sans JavaScript, sans
+ * IntersectionObserver, ou si ce module échoue à se charger, rien n'est masqué.
+ */
+function preparerApparitions() {
+  if (!('IntersectionObserver' in window)) return;
+  document.documentElement.classList.add('js');
+
+  const observateur = new IntersectionObserver((entrees) => {
+    for (const e of entrees) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('vu');
+      observateur.unobserve(e.target);
+    }
+  }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+
+  for (const bloc of document.querySelectorAll('.rv')) observateur.observe(bloc);
+}
+
+/** Compte à rebours jusqu'à la date du mariage, lue dans le `<time>` de la page. */
+function preparerRebours() {
+  const balise = document.getElementById('date-mariage');
+  const cases = ['jours', 'heures', 'minutes', 'secondes']
+    .map((n) => document.getElementById(`cd-${n}`));
+  if (!balise || cases.some((c) => !c)) return;
+
+  // La date vit dans index.html, avec le reste du contenu éditorial (D17).
+  const jourJ = new Date(balise.getAttribute('datetime') || '');
+  if (Number.isNaN(jourJ.getTime())) return;
+
+  const deuxChiffres = (n) => String(n).padStart(2, '0');
+
+  const battre = () => {
+    let reste = Math.max(0, jourJ.getTime() - Date.now()) / 1000;
+    const j = Math.floor(reste / 86400); reste -= j * 86400;
+    const h = Math.floor(reste / 3600);  reste -= h * 3600;
+    const m = Math.floor(reste / 60);
+    const s = Math.floor(reste - m * 60);
+    cases[0].textContent = String(j);
+    cases[1].textContent = deuxChiffres(h);
+    cases[2].textContent = deuxChiffres(m);
+    cases[3].textContent = deuxChiffres(s);
+  };
+
+  battre();
+  setInterval(battre, 1000);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
    Démarrage
    ══════════════════════════════════════════════════════════════════════════ */
 
+preparerApparitions();
+preparerRebours();
 preparerAccueil();
 preparerEmail();
 preparerCode();

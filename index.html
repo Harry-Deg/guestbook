@@ -12,7 +12,9 @@
   que fetch suit seul (C4). Oublier le second casse tous les appels.
 
   Il n'y a volontairement ni 'unsafe-inline' ni 'unsafe-eval' : aucun script ni
-  style en ligne nulle part dans ce fichier, et c'est à tenir.
+  style en ligne nulle part dans ce fichier, et c'est à tenir. Les polices sont
+  auto-hébergées pour la même raison — et pour ne pas donner l'adresse IP de
+  chaque invité à un tiers.
 -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'none';
@@ -26,7 +28,7 @@
   frame-ancestors 'none'">
 
 <meta name="description" content="Informations pratiques et confirmation de présence pour le mariage d'Alec et Gloria.">
-<meta name="theme-color" content="#1e2d44">
+<meta name="theme-color" content="#f1d2d4">
 <title>Mariage d'Alec et Gloria</title>
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -34,226 +36,295 @@
 
 <a class="lien-evitement" href="#principal">Aller au contenu</a>
 
-<div class="page">
+<div class="page papier">
 
-  <header class="bandeau">
-    <p class="bandeau__prenoms">Alec &amp; Gloria</p>
-    <hr class="bandeau__filet">
-    <p class="bandeau__date">Samedi 12 juin 2027</p>
-  </header>
+  <!-- En-tête discret, présent sur tous les écrans : c'est le monogramme
+       de la papeterie, pas un titre. Les vrais prénoms sont dans le bandeau. -->
+  <p class="entete"><span class="entete__monogramme">A &amp; G</span></p>
 
   <main id="principal">
 
     <!-- ═══ Écran 1 — accueil et informations pratiques ═══════════════════ -->
     <section id="ecran-accueil">
 
-      <div class="carte">
-        <h2 tabindex="-1" data-titre>Vous êtes invités</h2>
-        <p>Nous serions très heureux de vous compter parmi nous pour ce jour-là.</p>
-        <p class="texte-doux" id="rappel-date-limite"></p>
-        <div id="msg-accueil"></div>
-        <button type="button" class="bouton" id="btn-repondre">Répondre à l'invitation</button>
+      <header class="bandeau">
+        <div class="bandeau__image">
+          <img class="bandeau__photo" src="assets/img/hero.jpg" alt=""
+               width="860" height="1174" fetchpriority="high">
+          <div class="bandeau__fondu"></div>
+        </div>
+        <div class="bandeau__texte">
+          <h1 class="bandeau__prenoms" tabindex="-1" data-titre>
+            <span>Alec</span>
+            <span class="bandeau__et">&amp;</span>
+            <span>Gloria</span>
+          </h1>
+          <div class="filet" aria-hidden="true"><span>• ◆ •</span></div>
+          <p class="bandeau__date">
+            <time id="date-mariage" datetime="2027-06-12T15:00:00+02:00">Samedi 12 juin 2027</time>
+          </p>
+          <p class="label bandeau__lieu">À compléter — domaine<br>À compléter — ville</p>
+        </div>
+      </header>
+
+      <div class="section section--serre">
+        <div class="pile">
+          <p class="label">Nous avons la joie de vous inviter<br>à notre mariage</p>
+          <p class="texte-doux" id="rappel-date-limite"></p>
+          <div id="msg-accueil"></div>
+          <button type="button" class="bouton" id="btn-repondre">Répondre à l'invitation</button>
+        </div>
       </div>
 
-      <div class="carte">
-        <img class="photo-bande" src="assets/img/table.jpg" alt="" width="1000" height="814" loading="lazy">
-        <h2>Le programme</h2>
-        <ul class="programme">
-          <li>
-            <span class="programme__heure">15 h 00</span>
-            <span>
-              <p class="programme__lieu"><strong>Cérémonie</strong></p>
-              <p class="programme__adresse">À compléter — lieu et adresse</p>
-            </span>
-          </li>
-          <li>
-            <span class="programme__heure">17 h 00</span>
-            <span>
-              <p class="programme__lieu"><strong>Vin d'honneur</strong></p>
-              <p class="programme__adresse">À compléter — lieu et adresse</p>
-            </span>
-          </li>
-          <li>
-            <span class="programme__heure">20 h 00</span>
-            <span>
-              <p class="programme__lieu"><strong>Dîner et soirée</strong></p>
-              <p class="programme__adresse">À compléter — lieu et adresse</p>
-            </span>
-          </li>
-          <li>
-            <span class="programme__heure">11 h 00</span>
-            <span>
-              <p class="programme__lieu"><strong>Brunch du lendemain</strong></p>
-              <p class="programme__adresse">À compléter — lieu et adresse</p>
-            </span>
-          </li>
-        </ul>
+      <!-- ── Compte à rebours ── -->
+      <div class="section section--serre">
+        <div class="carte rv"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <div class="pile rebours">
+            <h2 class="script">Compte à rebours</h2>
+            <p class="label">Avant le plus beau jour de notre vie</p>
+            <div class="rebours__grille" role="timer">
+              <div><span class="rebours__nombre" id="cd-jours">—</span><span class="label">Jours</span></div>
+              <div><span class="rebours__nombre" id="cd-heures">—</span><span class="label">Heures</span></div>
+              <div><span class="rebours__nombre" id="cd-minutes">—</span><span class="label">Min</span></div>
+              <div><span class="rebours__nombre" id="cd-secondes">—</span><span class="label">Sec</span></div>
+            </div>
+          </div>
+        </div></div></div></div>
       </div>
 
-      <div class="carte">
-        <img class="photo-bande" src="assets/img/couple.jpg" alt="" width="793" height="1000" loading="lazy">
-        <h2>Venir et dormir</h2>
-        <p><strong>En voiture</strong> — à compléter : itinéraire et stationnement.</p>
-        <p><strong>En train</strong> — à compléter : gare la plus proche, navette éventuelle.</p>
-        <p class="texte-doux">Quelques adresses d'hébergement seront ajoutées ici.</p>
+      <!-- ── Bandeau Jour J ── -->
+      <div class="section bande">
+        <div class="pile">
+          <h2 class="script rv">Le jour J</h2>
+          <p class="label rv d1">À compléter — date complète</p>
+        </div>
+      </div>
+
+      <!-- ── Programme ── -->
+      <div class="section">
+        <div class="carte rv"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <ul class="programme">
+            <li>
+              <p class="programme__heure">15 h 00</p>
+              <p class="programme__lieu">Cérémonie</p>
+              <p class="programme__adresse">À compléter — lieu et adresse</p>
+            </li>
+            <li>
+              <p class="programme__heure">17 h 00</p>
+              <p class="programme__lieu">Vin d'honneur</p>
+              <p class="programme__adresse">À compléter — lieu et adresse</p>
+            </li>
+            <li>
+              <p class="programme__heure">20 h 00</p>
+              <p class="programme__lieu">Dîner et soirée</p>
+              <p class="programme__adresse">À compléter — lieu et adresse</p>
+            </li>
+            <li>
+              <p class="programme__heure">11 h 00</p>
+              <p class="programme__lieu">Brunch du lendemain</p>
+              <p class="programme__adresse">À compléter — lieu et adresse</p>
+            </li>
+          </ul>
+        </div></div></div></div>
+      </div>
+
+      <!-- ── Venir et dormir ── -->
+      <div class="section section--serre">
+        <div class="carte rv"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <div class="pile">
+            <h2 class="script">Venir et dormir</h2>
+            <div class="filet" aria-hidden="true"><span>• ◆ •</span></div>
+            <p class="label">En voiture</p>
+            <p class="programme__adresse">À compléter — itinéraire et stationnement.</p>
+            <p class="label">En train</p>
+            <p class="programme__adresse">À compléter — gare la plus proche, navette éventuelle.</p>
+            <p class="label">Dormir sur place</p>
+            <p class="programme__adresse">À compléter — quelques adresses d'hébergement.</p>
+          </div>
+        </div></div></div></div>
       </div>
 
     </section>
 
     <!-- ═══ Écran 2 — adresse email ═══════════════════════════════════════ -->
     <section id="ecran-email" hidden>
-      <div class="carte">
-        <h2 tabindex="-1" data-titre>Répondre à l'invitation</h2>
-        <p>Indiquez l'adresse email à laquelle vous avez reçu le faire-part. Nous vous
-           enverrons un code à 6 chiffres.</p>
-
-        <div id="msg-email"></div>
-
-        <form id="form-email" novalidate>
-          <div class="champ">
-            <label for="champ-email">Votre adresse email</label>
-            <input type="email" id="champ-email" name="email" autocomplete="email"
-                   inputmode="email" autocapitalize="off" spellcheck="false"
-                   aria-describedby="err-email" required>
-            <span class="erreur-champ" id="err-email"></span>
+      <div class="section">
+        <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <div class="pile">
+            <h2 class="script" tabindex="-1" data-titre>Répondre à l'invitation</h2>
+            <div class="filet" aria-hidden="true"><span>• ◆ •</span></div>
+            <p class="texte-doux">Indiquez l'adresse email à laquelle vous avez reçu le
+               faire-part. Nous vous enverrons un code à 6 chiffres.</p>
           </div>
 
-          <!-- Piège à robots : invisible pour un humain, rempli par un automate.
-               S'il est rempli, le serveur fait semblant d'accepter sans rien envoyer. -->
-          <div class="champ-piege" aria-hidden="true">
-            <label for="champ-piege">Ne remplissez pas ce champ</label>
-            <input type="text" id="champ-piege" name="website" tabindex="-1" autocomplete="off">
-          </div>
+          <div id="msg-email"></div>
 
-          <button type="submit" class="bouton" id="btn-envoyer-code">Recevoir mon code</button>
-        </form>
+          <form id="form-email" novalidate>
+            <div class="champ">
+              <label for="champ-email">Votre adresse email</label>
+              <input type="email" id="champ-email" name="email" autocomplete="email"
+                     inputmode="email" autocapitalize="off" spellcheck="false"
+                     aria-describedby="err-email" required>
+              <span class="erreur-champ" id="err-email"></span>
+            </div>
 
-        <p class="texte-doux">
-          <button type="button" class="bouton--lien" id="btn-retour-accueil">Retour aux informations</button>
-        </p>
+            <!-- Piège à robots : invisible pour un humain, rempli par un automate.
+                 S'il est rempli, le serveur fait semblant d'accepter sans rien envoyer. -->
+            <div class="champ-piege" aria-hidden="true">
+              <label for="champ-piege">Ne remplissez pas ce champ</label>
+              <input type="text" id="champ-piege" name="website" tabindex="-1" autocomplete="off">
+            </div>
+
+            <div class="pile">
+              <button type="submit" class="bouton" id="btn-envoyer-code">Recevoir mon code</button>
+              <button type="button" class="bouton--lien" id="btn-retour-accueil">Retour aux informations</button>
+            </div>
+          </form>
+        </div></div></div></div>
       </div>
     </section>
 
     <!-- ═══ Écran 3 — code reçu par email ════════════════════════════════ -->
     <section id="ecran-code" hidden>
-      <div class="carte">
-        <h2 tabindex="-1" data-titre>Votre code</h2>
-        <p>Nous avons envoyé un code à 6 chiffres à <strong id="rappel-email"></strong>.
-           Il est valable 10 minutes.</p>
-
-        <div id="msg-code"></div>
-
-        <form id="form-code" novalidate>
-          <div class="champ champ-code">
-            <label for="champ-code">Code à 6 chiffres</label>
-            <span class="aide" id="aide-code">Pensez à regarder dans vos courriers indésirables.</span>
-            <input type="text" id="champ-code" inputmode="numeric" autocomplete="one-time-code"
-                   pattern="[0-9]{6}" maxlength="6" autocapitalize="off" spellcheck="false"
-                   aria-describedby="aide-code err-code" required>
-            <span class="erreur-champ" id="err-code"></span>
+      <div class="section">
+        <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <div class="pile">
+            <h2 class="script" tabindex="-1" data-titre>Votre code</h2>
+            <div class="filet" aria-hidden="true"><span>• ◆ •</span></div>
+            <p class="texte-doux">Nous avons envoyé un code à 6 chiffres à
+               <strong id="rappel-email"></strong>. Il est valable 10 minutes.</p>
           </div>
 
-          <button type="submit" class="bouton" id="btn-valider-code">Valider</button>
-        </form>
+          <div id="msg-code"></div>
 
-        <p class="texte-doux">
-          <button type="button" class="bouton--lien" id="btn-renvoyer-code">Renvoyer un code</button>
-          ·
-          <button type="button" class="bouton--lien" id="btn-changer-email">Changer d'adresse</button>
-        </p>
+          <form id="form-code" novalidate>
+            <div class="champ champ-code">
+              <label for="champ-code">Code à 6 chiffres</label>
+              <span class="aide" id="aide-code">Pensez à regarder dans vos courriers indésirables.</span>
+              <input type="text" id="champ-code" inputmode="numeric" autocomplete="one-time-code"
+                     pattern="[0-9]{6}" maxlength="6" autocapitalize="off" spellcheck="false"
+                     aria-describedby="aide-code err-code" required>
+              <span class="erreur-champ" id="err-code"></span>
+            </div>
+
+            <div class="pile">
+              <button type="submit" class="bouton" id="btn-valider-code">Valider</button>
+              <button type="button" class="bouton--lien" id="btn-renvoyer-code">Demander un nouveau code</button>
+              <button type="button" class="bouton--lien" id="btn-changer-email">Changer d'adresse</button>
+            </div>
+          </form>
+        </div></div></div></div>
       </div>
     </section>
 
     <!-- ═══ Écran 4 — formulaire ═════════════════════════════════════════ -->
     <section id="ecran-formulaire" hidden>
-      <div class="carte">
-        <h2 tabindex="-1" data-titre id="titre-foyer"></h2>
-        <p class="texte-doux" id="sous-titre-foyer"></p>
-        <p class="texte-doux" id="rappel-limite-formulaire"></p>
-        <div class="message message--info" id="msg-formulaire-clos" role="status" hidden>
-          <p>Les réponses sont closes : ce formulaire est en lecture seule.</p>
-        </div>
-      </div>
+      <div class="section">
 
-      <form id="form-rsvp" novalidate>
-        <div class="carte">
-          <div id="liste-personnes"></div>
+        <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <div class="pile">
+            <h2 class="script" tabindex="-1" data-titre id="titre-foyer"></h2>
+            <div class="filet" aria-hidden="true"><span>• ◆ •</span></div>
+            <p class="label" id="sous-titre-foyer"></p>
+            <p class="texte-doux" id="rappel-limite-formulaire"></p>
+          </div>
+          <div class="message message--info" id="msg-formulaire-clos" role="status" hidden>
+            <p>Les réponses sont closes : ce formulaire est en lecture seule.</p>
+          </div>
+        </div></div></div></div>
 
-          <div class="personne accompagnant" id="bloc-accompagnant" hidden>
-            <label class="case-a-cocher" for="case-accompagnant">
-              <input type="checkbox" id="case-accompagnant">
-              <span>Je viens accompagné·e
-                <span class="texte-doux" id="texte-places-libres"></span></span>
-            </label>
-            <div id="details-accompagnant">
-              <div class="champ">
-                <label for="acc-nom">Nom de votre accompagnant·e</label>
-                <span class="aide">Pour le plan de table et son menu.</span>
-                <input type="text" id="acc-nom" maxlength="60">
-              </div>
-              <div class="champ">
-                <label for="acc-regime">Régime alimentaire</label>
-                <select id="acc-regime">
-                  <option value="aucun">Aucun régime particulier</option>
-                  <option value="vegetarien">Végétarien</option>
-                  <option value="vegan">Végétalien</option>
-                  <option value="sans_porc">Sans porc</option>
-                  <option value="sans_gluten">Sans gluten</option>
-                  <option value="menu_enfant">Menu enfant</option>
-                  <option value="autre">Autre (précisez ci-dessous)</option>
-                </select>
-              </div>
-              <div class="champ">
-                <label for="acc-allergies">Allergies ou précisions</label>
-                <input type="text" id="acc-allergies" maxlength="200">
+        <form id="form-rsvp" novalidate>
+          <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+            <div id="liste-personnes"></div>
+
+            <div class="personne accompagnant" id="bloc-accompagnant" hidden>
+              <label class="case-a-cocher" for="case-accompagnant">
+                <input type="checkbox" id="case-accompagnant">
+                <span>Je viens accompagné·e
+                  <span class="texte-doux" id="texte-places-libres"></span></span>
+              </label>
+              <div id="details-accompagnant">
+                <div class="champ">
+                  <label for="acc-nom">Nom de votre accompagnant·e</label>
+                  <span class="aide">Pour le plan de table et son menu.</span>
+                  <input type="text" id="acc-nom" maxlength="60">
+                </div>
+                <div class="champ">
+                  <label for="acc-regime">Régime alimentaire</label>
+                  <select id="acc-regime">
+                    <option value="aucun">Aucun régime particulier</option>
+                    <option value="vegetarien">Végétarien</option>
+                    <option value="vegan">Végétalien</option>
+                    <option value="sans_porc">Sans porc</option>
+                    <option value="sans_gluten">Sans gluten</option>
+                    <option value="menu_enfant">Menu enfant</option>
+                    <option value="autre">Autre (précisez ci-dessous)</option>
+                  </select>
+                </div>
+                <div class="champ">
+                  <label for="acc-allergies">Allergies ou précisions</label>
+                  <input type="text" id="acc-allergies" maxlength="200">
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div></div></div></div>
 
-        <div class="carte">
-          <div class="champ">
-            <label for="champ-commentaire">Un mot pour nous&nbsp;?</label>
-            <span class="aide">Navette, hébergement, contrainte d'accès, ou simplement un message.</span>
-            <textarea id="champ-commentaire" maxlength="500"></textarea>
-          </div>
+          <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+            <div class="champ">
+              <label for="champ-commentaire">Un mot pour nous&nbsp;?</label>
+              <span class="aide">Navette, hébergement, contrainte d'accès, ou simplement un message.</span>
+              <textarea id="champ-commentaire" maxlength="500"></textarea>
+            </div>
 
-          <div id="msg-formulaire"></div>
+            <div id="msg-formulaire"></div>
 
-          <button type="submit" class="bouton" id="btn-envoyer-reponse">Envoyer notre réponse</button>
-        </div>
-      </form>
+            <div class="pile">
+              <button type="submit" class="bouton" id="btn-envoyer-reponse">Envoyer notre réponse</button>
+            </div>
+          </div></div></div></div>
+        </form>
+
+      </div>
     </section>
 
     <!-- ═══ Écran 5 — merci ══════════════════════════════════════════════ -->
     <section id="ecran-merci" hidden>
-      <div class="carte">
-        <img class="photo-bande" src="assets/img/detail.jpg" alt="" width="764" height="800" loading="lazy">
+      <div class="section">
+        <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in carte__in--image">
+          <img src="assets/img/couple2.jpg" alt="" width="760" height="872" loading="lazy">
+        </div></div></div></div>
 
-        <div class="message message--succes" id="bandeau-merci" role="status">
-          <p><strong>C'est enregistré, merci&nbsp;!</strong></p>
-        </div>
-        <div class="message message--info" id="msg-merci-clos" role="status" hidden>
-          <p>Les réponses sont closes.</p>
-        </div>
+        <div class="carte"><div class="carte__gouttiere"><div class="carte__filet"><div class="carte__in">
+          <div class="message message--succes" id="bandeau-merci" role="status">
+            <p><strong>C'est enregistré, merci&nbsp;!</strong></p>
+          </div>
+          <div class="message message--info" id="msg-merci-clos" role="status" hidden>
+            <p>Les réponses sont closes.</p>
+          </div>
 
-        <h2 tabindex="-1" data-titre id="titre-merci">Votre réponse</h2>
-        <ul class="recap" id="recap-personnes"></ul>
+          <div class="pile">
+            <h2 class="script" tabindex="-1" data-titre id="titre-merci">Votre réponse</h2>
+            <div class="filet" aria-hidden="true"><span>• ◆ •</span></div>
+          </div>
 
-        <button type="button" class="bouton bouton--secondaire" id="btn-modifier">Modifier ma réponse</button>
-        <p class="texte-doux" id="note-merci"></p>
-        <p class="texte-doux">
-          <button type="button" class="bouton--lien" id="btn-deconnexion">Se déconnecter</button>
-        </p>
+          <ul class="recap" id="recap-personnes"></ul>
+
+          <div class="pile">
+            <button type="button" class="bouton bouton--secondaire" id="btn-modifier">Modifier ma réponse</button>
+            <p class="texte-doux" id="note-merci"></p>
+            <button type="button" class="bouton--lien" id="btn-deconnexion">Se déconnecter</button>
+          </div>
+        </div></div></div></div>
       </div>
     </section>
 
   </main>
 
   <footer class="pied">
+    <p class="signature">A &amp; G</p>
     <!-- L'adresse est écrite ici par app.js, depuis Config!CONTACT_MARIES :
          elle n'est pas dans le dépôt, qui est public. -->
-    <p id="contact-pied">Une question&nbsp;? Écrivez-nous.</p>
+    <p class="label" id="contact-pied">Une question&nbsp;? Écrivez-nous.</p>
   </footer>
 
 </div>

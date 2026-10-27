@@ -1,0 +1,537 @@
+<title>Invitation Alec & Gloria</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Jost:wght@300;400&display=swap">
+<style>
+/* Mise en page : colonne unique façon faire-part (max 480px), enveloppe plein écran à ouvrir, puis sections empilées.
+   Page volontairement mono-thème (papeterie claire) : toutes les couleurs sont définies ici. */
+:root{
+  --rose:#F1D2D4;          /* fond principal, rose poudré */
+  --rose-2:#ECC6C9;        /* fond légèrement plus soutenu */
+  --peche:#F0C3B6;         /* enveloppe */
+  --peche-ombre:#DFA898;   /* ombres de l'enveloppe */
+  --sceau:#EBB9AE;         /* cire */
+  --encre:#6B5853;         /* titres, taupe chaud */
+  --encre-2:#8D7A75;       /* texte courant */
+  --trait:#B89892;         /* filets, bordures */
+  --olive:#4B4A3B;         /* bandeau Jour J */
+  --creme:#F6E6E2;         /* texte sur olive */
+  --f-display:"Cormorant Garamond","Cormorant",Garamond,"Times New Roman",serif;
+  --f-label:"Jost","Futura","Avenir Next","Helvetica Neue",Arial,sans-serif;
+  --col:480px;
+  --bevel:14px;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--rose)}
+body{background:var(--rose);color:var(--encre-2);font-family:var(--f-display);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.locked{overflow:hidden;height:100%}
+
+/* Grain papier, très discret */
+.paper{position:relative}
+.paper::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.32;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .42 0 0 0 0 .4 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ---------- Typo ---------- */
+.label{font-family:var(--f-label);font-weight:300;font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--encre-2)}
+.script{font-family:var(--f-display);font-style:italic;font-weight:400;color:var(--encre);letter-spacing:.01em}
+.hour{font-family:var(--f-display);font-weight:300;font-size:38px;letter-spacing:.06em;color:var(--encre);font-variant-numeric:tabular-nums;line-height:1}
+.desc{font-style:italic;font-size:15.5px;color:var(--encre-2);max-width:30ch;margin-inline:auto;line-height:1.5}
+h1,h2,h3,p{margin:0;text-wrap:balance}
+
+/* ---------- Structure ---------- */
+main{max-width:var(--col);margin-inline:auto;position:relative;background:var(--rose);box-shadow:0 0 60px rgba(107,88,83,.08)}
+.section{padding-block:72px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));text-align:center;position:relative}
+.stack{display:flex;flex-direction:column;align-items:center;gap:14px}
+.divider{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--trait);width:100%;max-width:220px;margin-inline:auto}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--trait);opacity:.6}
+.divider span{font-size:9px;letter-spacing:.5em;padding-left:.5em}
+.diamond{width:6px;height:6px;background:var(--trait);transform:rotate(45deg);opacity:.7;margin-inline:auto}
+
+/* Cadre papier à coins biseautés + double filet */
+.frame{--b:var(--bevel);background:var(--trait);padding:1px;
+  clip-path:polygon(var(--b) 0,calc(100% - var(--b)) 0,100% var(--b),100% calc(100% - var(--b)),calc(100% - var(--b)) 100%,var(--b) 100%,0 calc(100% - var(--b)),0 var(--b))}
+.frame>.gap{background:var(--rose);padding:5px;clip-path:inherit}
+.frame>.gap>.line{background:color-mix(in srgb,var(--trait) 70%,var(--rose));padding:1px;clip-path:inherit}
+.frame>.gap>.line>.in{background:var(--rose);clip-path:inherit;padding:34px 22px}
+
+/* ---------- Apparitions ---------- */
+.js .rv{opacity:0;transform:translateY(18px);transition:opacity 1.2s cubic-bezier(.2,.7,.2,1),transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.js .rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.15s}.rv.d2{transition-delay:.3s}.rv.d3{transition-delay:.45s}.rv.d4{transition-delay:.6s}
+
+/* ---------- Enveloppe ---------- */
+#envelope{position:fixed;inset:0;z-index:50;background:var(--peche);overflow:hidden;display:flex;justify-content:center;
+  transition:opacity 1.1s ease .9s,visibility 0s linear 2s}
+#envelope.open{opacity:0;visibility:hidden;pointer-events:none}
+.env-body{position:relative;width:100%;max-width:var(--col);height:100%;perspective:1400px}
+.env-folds{position:absolute;inset:0;width:100%;height:100%}
+.flap{position:absolute;left:0;top:0;width:100%;height:60%;transform-origin:50% 0;transform-style:preserve-3d;
+  transition:transform 1.3s cubic-bezier(.55,.05,.3,1) .25s;z-index:2;filter:drop-shadow(0 6px 10px rgba(150,95,80,.22))}
+.flap svg{width:100%;height:100%;display:block}
+#envelope.open .flap{transform:rotateX(178deg)}
+.seal{position:absolute;left:50%;top:49.5%;width:74px;height:74px;transform:translate(-50%,-50%);z-index:3;border:0;padding:0;cursor:pointer;
+  background:radial-gradient(circle at 38% 32%,#F7D3C9 0%,var(--sceau) 42%,#D99C8E 100%);
+  border-radius:47% 53% 50% 50% / 52% 46% 54% 48%;
+  box-shadow:0 3px 6px rgba(140,80,65,.35),inset 0 -3px 6px rgba(160,90,75,.35),inset 0 3px 5px rgba(255,235,228,.7);
+  animation:pulse 2.8s ease-in-out infinite;transition:transform .9s ease,opacity .7s ease}
+.seal::before{content:"";position:absolute;inset:11px;border-radius:50%;
+  box-shadow:inset 0 2px 3px rgba(150,85,70,.45),0 1px 0 rgba(255,235,230,.6)}
+.seal span{position:relative;font-family:var(--f-display);font-style:italic;font-size:19px;color:#C98A7C;letter-spacing:.02em;
+  text-shadow:0 1px 0 rgba(255,232,226,.8),0 -1px 0 rgba(150,85,70,.35)}
+.seal:focus-visible{outline:1px solid var(--encre);outline-offset:6px}
+#envelope.open .seal{animation:none;transform:translate(-50%,-50%) scale(1.25);opacity:0}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.045)}}
+.env-hint{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:3;text-align:center;color:#A9776B;transition:opacity .5s}
+#envelope.open .env-hint{opacity:0}
+
+/* ---------- Flottants ---------- */
+.float-btn{position:fixed;z-index:40;border:0;cursor:pointer;color:var(--creme);
+  background:rgba(107,88,83,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#music{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));width:46px;height:46px;border-radius:50%;display:grid;place-items:center}
+#music svg{width:20px;height:20px}
+#lang{right:calc(14px + env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));height:30px;padding:0 12px;border-radius:15px;
+  display:flex;align-items:center;gap:6px;font-family:var(--f-label);font-size:10.5px;letter-spacing:.18em;color:var(--encre);background:rgba(246,230,226,.75)}
+#lang:focus-visible,#music:focus-visible{outline:1px solid var(--encre);outline-offset:3px}
+@media (min-width:520px){
+  #music{right:calc(50% - var(--col)/2 + 18px)}
+  #lang{right:calc(50% - var(--col)/2 + 14px)}
+}
+
+/* ---------- 1. Accueil ---------- */
+.hero{min-height:100svh;display:flex;align-items:center;justify-content:center;padding-block:120px 110px;overflow:hidden}
+.botanic{position:absolute;pointer-events:none;color:var(--encre)}
+.botanic svg{display:block;width:100%;height:100%;overflow:visible}
+.b-tl{left:-12px;top:-6px;width:42%;height:34%}
+.b-tr{right:-12px;top:-6px;width:42%;height:34%;transform:scaleX(-1)}
+.b-bl{left:-8px;bottom:-4px;width:52%;height:44%}
+.b-br{right:-8px;bottom:-4px;width:52%;height:44%;transform:scaleX(-1)}
+.botanic path{stroke-dasharray:var(--len);stroke-dashoffset:var(--len)}
+body.opened .botanic path{transition:stroke-dashoffset 3.2s cubic-bezier(.3,.6,.2,1) var(--dl,0s);stroke-dashoffset:0}
+.botanic .bloom{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3)}
+body.opened .botanic .bloom{transition:opacity 1.2s ease var(--dl,0s),transform 1.2s ease var(--dl,0s);opacity:1;transform:none}
+
+.names{font-size:clamp(64px,19vw,88px);line-height:.95;font-weight:400;display:flex;flex-direction:column;align-items:center}
+.names .amp{font-size:.42em;line-height:1.3;color:var(--encre-2)}
+.names .ch{display:inline-block;opacity:0;filter:blur(6px);transform:translateY(6px)}
+body.opened .names .ch{animation:ink 1.1s ease forwards;animation-delay:calc(1.4s + var(--i) * .09s)}
+@keyframes ink{to{opacity:1;filter:none;transform:none}}
+.hero .date{font-size:21px;letter-spacing:.14em;color:var(--encre)}
+.hero .label.lead{line-height:2.1}
+
+/* ---------- 2. Compte à rebours ---------- */
+.countdown h2{font-size:44px;line-height:1}
+.cd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:22px;width:100%}
+.cd-grid div{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+.cd-grid div+div::before{content:"";position:absolute;left:-2px;top:8px;bottom:22px;width:1px;background:var(--trait);opacity:.45}
+.cd-num{font-size:40px;font-weight:300;color:var(--encre);font-variant-numeric:tabular-nums;line-height:1}
+.cd-grid .label{font-size:9px;letter-spacing:.24em}
+
+/* ---------- 3. Lieu ---------- */
+.venue-name{font-size:40px;line-height:1.05}
+.venue .when{font-style:italic;font-size:20px;color:var(--encre)}
+.addr{font-size:14.5px;color:var(--encre-2);line-height:1.5}
+.map{width:100%;margin-top:10px}
+.map .in{padding:0!important}
+.map svg{display:block;width:100%;height:auto}
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 26px;margin-top:6px}
+.links a,.links button{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:var(--encre);text-decoration:none;background:none;border:0;cursor:pointer;padding:0}
+.links svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.3}
+.links a:hover .label,.links button:hover .label{color:var(--encre)}
+.links a:focus-visible,.links button:focus-visible{outline:1px solid var(--encre);outline-offset:3px}
+.toast{font-size:13px;font-style:italic;color:var(--encre-2);min-height:1.2em}
+
+/* ---------- 4. Jour J ---------- */
+.band{background:var(--olive);color:var(--creme);padding-block:86px 130px;overflow:hidden}
+.band .script{color:var(--creme);font-size:56px;line-height:1}
+.band .label{color:var(--creme);opacity:.8}
+.band .botanic{color:var(--creme);opacity:.85;left:-10px;top:-10px;width:46%;height:120%}
+
+/* ---------- 5. Programme ---------- */
+.program{margin-top:-96px;padding-top:0;z-index:2}
+.program .in{padding:44px 22px 40px!important}
+.steps{display:flex;flex-direction:column;align-items:center;gap:30px}
+.step{display:flex;flex-direction:column;align-items:center;gap:9px}
+.step .label{color:var(--encre)}
+
+/* ---------- 6. RSVP ---------- */
+.rsvp p.script{font-size:24px;line-height:1.3;max-width:24ch}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 34px;border:1px solid var(--encre);color:var(--encre);text-decoration:none;
+  font-family:var(--f-label);font-weight:400;font-size:11px;letter-spacing:.32em;text-transform:uppercase;transition:background .4s,color .4s}
+.btn:hover,.btn:focus-visible{background:var(--encre);color:var(--rose);outline:none}
+.sign{font-size:30px;margin-top:20px}
+footer{padding-block:0 60px;text-align:center}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .js .rv{opacity:1;transform:none}
+  .names .ch{opacity:1;filter:none;transform:none}
+  .botanic path{stroke-dashoffset:0}.botanic .bloom{opacity:1;transform:none}
+}
+</style>
+
+<!-- ============ ENVELOPPE ============ -->
+<div id="envelope" class="paper" aria-label="Enveloppe">
+  <div class="env-body">
+    <svg class="env-folds" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="gL" x1="0" x2="1"><stop offset="0" stop-color="#EDBBAD"/><stop offset="1" stop-color="#F0C3B6"/></linearGradient>
+        <linearGradient id="gR" x1="1" x2="0"><stop offset="0" stop-color="#EDBBAD"/><stop offset="1" stop-color="#F0C3B6"/></linearGradient>
+      </defs>
+            <path d="M0 30 L46 70" stroke="#DCA597" stroke-width=".25" fill="none" vector-effect="non-scaling-stroke"/>
+      <path d="M100 30 L54 70" stroke="#DCA597" stroke-width=".25" fill="none" vector-effect="non-scaling-stroke"/>
+      <path d="M0 100 L46 72 Q50 69.5 54 72 L100 100" stroke="#E2AE9F" stroke-width=".25" fill="none" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="flap">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="gF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3CABD"/><stop offset="1" stop-color="#EEBEB0"/></linearGradient></defs>
+        <path d="M0 0 H100 V60 Q50 105 0 60 Z" fill="url(#gF)"/>
+        <path d="M0 60 Q50 105 100 60" fill="none" stroke="#D99F90" stroke-width=".6" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </div>
+    <button class="seal" id="seal" type="button" aria-label="Ouvrir l'invitation"><span>A&amp;G</span></button>
+    <p class="env-hint label" data-t="tapSeal">Touchez le sceau pour ouvrir</p>
+  </div>
+</div>
+
+<button id="lang" class="float-btn" type="button" aria-label="Changer de langue">
+  <svg width="16" height="11" viewBox="0 0 3 2" aria-hidden="true" id="flag"><rect width="1" height="2" fill="#30479B"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#D8443D"/></svg>
+  <span id="langCode">FR</span><span aria-hidden="true">▾</span>
+</button>
+<button id="music" class="float-btn" type="button" aria-label="Lancer la musique" aria-pressed="false">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/>
+    <g id="waves"><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></g>
+    <g id="mute" hidden><path d="M16 10l4 4M20 10l-4 4"/></g>
+  </svg>
+</button>
+
+<main class="paper">
+  <!-- ============ 1. ACCUEIL ============ -->
+  <section class="section hero" id="accueil">
+    <div class="botanic b-tl" data-plant="hang" data-seed="3"></div>
+    <div class="botanic b-tr" data-plant="hang" data-seed="11"></div>
+    <div class="botanic b-bl" data-plant="rise" data-seed="7"></div>
+    <div class="botanic b-br" data-plant="rise" data-seed="19"></div>
+    <div class="stack" style="gap:22px;position:relative">
+      <p class="label lead rv" data-t="invite">Nous avons la joie de vous inviter<br>à notre mariage</p>
+      <h1 class="names script" aria-label="Alec et Gloria">
+        <span class="n1"></span><span class="amp">&amp;</span><span class="n2"></span>
+      </h1>
+      <div class="divider rv d2" aria-hidden="true"><span>• ◆ •</span></div>
+      <p class="date rv d3" data-c="dateLong"></p>
+      <p class="label rv d4" style="line-height:2"><span data-c="venueName"></span><br><span data-c="venueCity"></span></p>
+    </div>
+  </section>
+
+  <!-- ============ 2. COMPTE À REBOURS ============ -->
+  <section class="section countdown">
+    <div class="frame rv"><div class="gap"><div class="line"><div class="in stack">
+      <h2 class="script" data-t="countdown">Compte à rebours</h2>
+      <p class="label" data-t="countdownSub">Avant le plus beau jour de notre vie</p>
+      <div class="cd-grid" role="timer" aria-live="off">
+        <div><span class="cd-num" id="cdD">000</span><span class="label" data-t="days">Jours</span></div>
+        <div><span class="cd-num" id="cdH">00</span><span class="label" data-t="hours">Heures</span></div>
+        <div><span class="cd-num" id="cdM">00</span><span class="label" data-t="minutes">Min</span></div>
+        <div><span class="cd-num" id="cdS">00</span><span class="label" data-t="seconds">Sec</span></div>
+      </div>
+    </div></div></div></div>
+  </section>
+
+  <!-- ============ 3. LE LIEU ============ -->
+  <section class="section venue" style="padding-top:24px">
+    <div class="stack">
+      <p class="label rv" data-t="reception">La réception</p>
+      <h2 class="venue-name script rv d1" data-c="venueName"></h2>
+      <p class="label rv d1" data-c="venueCity"></p>
+      <p class="when rv d2" data-c="dateLong"></p>
+      <p class="addr rv d2"><span data-c="address1"></span><br><span data-c="address2"></span></p>
+      <!-- Sur GitHub Pages : remplacer ce SVG par une iframe OpenStreetMap/Google Maps dans le même cadre (filter: sepia(.2) saturate(.8)) -->
+      <div class="frame map rv d3"><div class="gap"><div class="line"><div class="in">
+        <svg viewBox="0 0 400 230" role="img" aria-label="Plan d'accès">
+          <rect width="400" height="230" fill="#F4DEDD"/>
+          <path d="M0 175 C70 160 110 200 180 185 S300 140 400 160 V230 H0Z" fill="#E9CDD0"/>
+          <path d="M-10 60 C80 70 120 30 210 55 S330 110 410 80" fill="none" stroke="#fff" stroke-width="9" opacity=".8"/>
+          <path d="M60 -10 C80 60 140 100 150 240" fill="none" stroke="#fff" stroke-width="6" opacity=".75"/>
+          <path d="M260 -10 C250 70 300 130 290 240" fill="none" stroke="#fff" stroke-width="4" opacity=".7"/>
+          <path d="M150 120 C190 112 230 128 290 118" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
+          <path d="M40 120 C90 108 120 140 150 130 S230 90 300 104" fill="none" stroke="#B48C88" stroke-width="2" stroke-dasharray="1 6" stroke-linecap="round"/>
+          <g transform="translate(222 104)">
+            <path d="M0 0 C-9 -12 -12 -18 -12 -24 A12 12 0 0 1 12 -24 C12 -18 9 -12 0 0Z" fill="#8D6F6A"/>
+            <circle cy="-24" r="4.2" fill="#F4DEDD"/>
+          </g>
+          <text x="232" y="140" font-family="Cormorant Garamond, serif" font-style="italic" font-size="15" fill="#6B5853" data-c="venueName"></text>
+        </svg>
+      </div></div></div></div>
+      <div class="links rv d4">
+        <a id="dirLink" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z"/><circle cx="8" cy="6.5" r="1.8"/></svg>
+          <span class="label" data-t="directions">Itinéraire</span></a>
+        <button id="icsBtn" type="button">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>
+          <span class="label" data-t="calendar">Ajouter au calendrier</span></button>
+      </div>
+      <p class="toast" id="toast" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ============ 4. BANDEAU JOUR J ============ -->
+  <section class="section band">
+    <div class="botanic" data-plant="hang" data-seed="27" data-light="1"></div>
+    <div class="stack" style="position:relative">
+      <h2 class="script rv" data-t="dday">Le Jour J</h2>
+      <p class="label rv d1" data-c="dateLabel"></p>
+    </div>
+  </section>
+
+  <!-- ============ 5. PROGRAMME ============ -->
+  <section class="section program">
+    <div class="frame"><div class="gap"><div class="line"><div class="in">
+      <div class="steps" id="steps"></div>
+    </div></div></div></div>
+  </section>
+
+  <!-- ============ 6. RSVP ============ -->
+  <section class="section rsvp" style="padding-top:20px">
+    <div class="stack" style="gap:26px">
+      <div class="divider rv" aria-hidden="true"><span>• ◆ •</span></div>
+      <p class="script rv d1" id="rsvpText"></p>
+      <a class="btn rv d2" id="rsvpBtn" href="#" data-t="rsvpBtn">Confirmer ma présence</a>
+      <p class="sign script rv d3">A &amp; G</p>
+    </div>
+  </section>
+  <footer><p class="label" data-t="footer">Avec tout notre amour</p></footer>
+</main>
+
+<script>
+/* =====================================================================
+   CONFIG : tous les textes et données de la page sont ici.
+   Les valeurs [entre crochets] / marquées EXEMPLE sont à remplacer.
+   ===================================================================== */
+const CONFIG = {
+  bride: "Gloria",
+  groom: "Alec",
+  initials: "A&G",
+  dateISO: "2027-07-31T14:00:00+02:00",    // EXEMPLE
+  durationHours: 12,
+  venueName: "Domaine des Roses",          // EXEMPLE
+  venueCity: "Ville",                      // EXEMPLE
+  address1: "Adresse du lieu",             // EXEMPLE
+  address2: "Code postal, Ville",          // EXEMPLE
+  rsvpUrl: "#",                            // -> page de connexion / RSVP existante
+  rsvpDeadline: { fr: "1er mai 2027", en: "May 1st, 2027" }, // EXEMPLE
+  musicSrc: null,                          // ex. "assets/music.mp3" ; null = boîte à musique générée
+  program: [                               // EXEMPLE
+    { time: "14:00", title: { fr: "Accueil des invités", en: "Guest arrival" },
+      desc: { fr: "Les invités arrivent et profitent de rafraîchissements avant la cérémonie.", en: "Guests arrive and enjoy light refreshments before the ceremony." } },
+    { time: "14:30", title: { fr: "Cérémonie", en: "Ceremony" },
+      desc: { fr: "Échange des vœux et des alliances.", en: "Exchange of vows and rings." } },
+    { time: "15:15", title: { fr: "Photos de groupe", en: "Group photos" },
+      desc: { fr: "Famille et amis se réunissent pour les photos.", en: "Family and friends gather for photographs." } },
+    { time: "16:00", title: { fr: "Vin d'honneur", en: "Cocktail hour" },
+      desc: { fr: "Cocktails, amuse-bouches et musique dans les jardins.", en: "Drinks, canapés and music in the gardens." } },
+    { time: "19:00", title: { fr: "Dîner", en: "Dinner reception" },
+      desc: { fr: "Dîner assis, discours des proches, puis la fête.", en: "Seated dinner, speeches, then the party." } }
+  ],
+  i18n: {
+    fr: { tapSeal:"Touchez le sceau pour ouvrir", invite:"Nous avons la joie de vous inviter<br>à notre mariage",
+      countdown:"Compte à rebours", countdownSub:"Avant le plus beau jour de notre vie",
+      days:"Jours", hours:"Heures", minutes:"Min", seconds:"Sec", reception:"La réception",
+      directions:"Itinéraire", calendar:"Ajouter au calendrier", dday:"Le Jour J",
+      rsvp:"Merci de confirmer votre présence<br>avant le {d}", rsvpBtn:"Confirmer ma présence",
+      footer:"Avec tout notre amour", icsDone:"Fichier calendrier téléchargé.", icsFail:"Le téléchargement est bloqué dans cet aperçu ; il fonctionnera sur le site.",
+      calTitle:"Mariage de Alec & Gloria", locale:"fr-FR" },
+    en: { tapSeal:"Tap the seal to open", invite:"We joyfully invite you<br>to our wedding",
+      countdown:"Countdown", countdownSub:"To the most special day of our lives",
+      days:"Days", hours:"Hours", minutes:"Min", seconds:"Sec", reception:"The reception",
+      directions:"Get directions", calendar:"Add to calendar", dday:"Wedding Day",
+      rsvp:"Kindly reply<br>by {d}", rsvpBtn:"RSVP",
+      footer:"With all our love", icsDone:"Calendar file downloaded.", icsFail:"Downloads are blocked in this preview; it will work on the live site.",
+      calTitle:"Alec & Gloria's wedding", locale:"en-GB" }
+  }
+};
+
+document.documentElement.classList.add("js");
+document.body.classList.add("locked");
+let lang = "fr";
+try { const s = localStorage.getItem("inv-lang"); if (s === "en" || s === "fr") lang = s; } catch (e) {}
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const T = k => CONFIG.i18n[lang][k];
+const wedding = new Date(CONFIG.dateISO);
+
+/* ---------- Prénoms lettre par lettre ---------- */
+function splitName(el, txt, offset) {
+  el.innerHTML = [...txt].map((c, i) => `<span class="ch" style="--i:${i + offset}">${c}</span>`).join("");
+}
+splitName($(".names .n1"), CONFIG.groom, 0);
+splitName($(".names .n2"), CONFIG.bride, CONFIG.groom.length + 1);
+
+/* ---------- Rendu des textes (FR / EN) ---------- */
+function render() {
+  const L = CONFIG.i18n[lang];
+  document.documentElement.lang = lang;
+  $$("[data-t]").forEach(el => { if (L[el.dataset.t] != null) el.innerHTML = L[el.dataset.t]; });
+  const long = wedding.toLocaleDateString(L.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
+  const map = { dateLong: long, dateLabel: long, venueName: CONFIG.venueName, venueCity: CONFIG.venueCity, address1: CONFIG.address1, address2: CONFIG.address2 };
+  $$("[data-c]").forEach(el => el.textContent = map[el.dataset.c] ?? "");
+  $("#rsvpText").innerHTML = L.rsvp.replace("{d}", CONFIG.rsvpDeadline[lang]);
+  $("#rsvpBtn").href = CONFIG.rsvpUrl;
+  $("#steps").innerHTML = CONFIG.program.map((s, i) => `
+    ${i ? '<div class="rv" aria-hidden="true"><div class="diamond"></div></div>' : ""}
+    <div class="step rv"><p class="hour">${s.time}</p><p class="label">${s.title[lang]}</p><p class="desc">${s.desc[lang]}</p></div>`).join("");
+  $("#langCode").textContent = lang.toUpperCase();
+  $("#flag").innerHTML = lang === "fr"
+    ? '<rect width="1" height="2" fill="#30479B"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#D8443D"/>'
+    : '<rect width="3" height="2" fill="#24387A"/><path d="M0 0L3 2M3 0L0 2" stroke="#fff" stroke-width=".45"/><path d="M0 0L3 2M3 0L0 2" stroke="#C8323A" stroke-width=".18"/><path d="M1.5 0V2M0 1H3" stroke="#fff" stroke-width=".6"/><path d="M1.5 0V2M0 1H3" stroke="#C8323A" stroke-width=".32"/>';
+  $("#dirLink").href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${CONFIG.venueName}, ${CONFIG.address1}, ${CONFIG.address2}`);
+  observe();
+}
+$("#lang").addEventListener("click", () => {
+  lang = lang === "fr" ? "en" : "fr";
+  try { localStorage.setItem("inv-lang", lang); } catch (e) {}
+  render();
+  $$(".rv").forEach(el => el.classList.add("in"));
+});
+
+/* ---------- Apparitions au scroll ---------- */
+let io;
+function observe() {
+  if (!("IntersectionObserver" in window)) { $$(".rv").forEach(el => el.classList.add("in")); return; }
+  io = io || new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .15, rootMargin: "0px 0px -6% 0px" });
+  $$(".rv:not(.in)").forEach(el => io.observe(el));
+}
+
+/* ---------- Compte à rebours ---------- */
+const pad = (n, l = 2) => String(n).padStart(l, "0");
+function tick() {
+  let d = Math.max(0, wedding - Date.now()) / 1000;
+  const D = Math.floor(d / 86400); d -= D * 86400;
+  const H = Math.floor(d / 3600); d -= H * 3600;
+  const M = Math.floor(d / 60); const S = Math.floor(d - M * 60);
+  $("#cdD").textContent = pad(D, D > 99 ? 3 : 2); $("#cdH").textContent = pad(H);
+  $("#cdM").textContent = pad(M); $("#cdS").textContent = pad(S);
+}
+tick(); setInterval(tick, 1000);
+
+/* ---------- Fichier .ics ---------- */
+$("#icsBtn").addEventListener("click", () => {
+  const f = dt => dt.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const end = new Date(wedding.getTime() + CONFIG.durationHours * 3600e3);
+  const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Invitation//FR","BEGIN:VEVENT",
+    "UID:" + Date.now() + "@invitation", "DTSTAMP:" + f(new Date()), "DTSTART:" + f(wedding), "DTEND:" + f(end),
+    "SUMMARY:" + T("calTitle"), "LOCATION:" + `${CONFIG.venueName}\\, ${CONFIG.address1}\\, ${CONFIG.address2}`,
+    "END:VEVENT","END:VCALENDAR"].join("\r\n");
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+    a.download = "mariage-alec-gloria.ics";
+    document.body.appendChild(a); a.click(); a.remove();
+    $("#toast").textContent = T("icsDone");
+  } catch (e) { $("#toast").textContent = T("icsFail"); }
+});
+
+/* ---------- Illustrations botaniques (SVG généré, trait fin) ---------- */
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function plant(box) {
+  const W = 200, H = 260, r = rng(+box.dataset.seed || 1), hang = box.dataset.plant === "hang";
+  const light = !!box.dataset.light;
+  const paths = [], blooms = [];
+  function branch(x, y, ang, len, depth, delay) {
+    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+    const bend = (r() - .5) * len * .5;
+    const cx = (x + x2) / 2 + Math.cos(ang + Math.PI / 2) * bend, cy = (y + y2) / 2 + Math.sin(ang + Math.PI / 2) * bend;
+    paths.push({ d: `M${x.toFixed(1)} ${y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`, w: Math.max(.45, depth * .32), len: len * 1.15, dl: delay });
+    if (depth <= 1 || len < 10) {
+      const n = 3 + Math.floor(r() * 4);
+      for (let i = 0; i < n; i++) {
+        const a = r() * Math.PI * 2, d = r() * 6;
+        blooms.push({ x: x2 + Math.cos(a) * d, y: y2 + Math.sin(a) * d, s: 1.3 + r() * 1.5, dl: delay + .8 + r() * .6 });
+      }
+      return;
+    }
+    const kids = 2 + (r() < .45 ? 1 : 0);
+    for (let k = 0; k < kids; k++) {
+      const t = .55 + r() * .45;
+      const bx = x + (x2 - x) * t, by = y + (y2 - y) * t;
+      branch(bx, by, ang + (r() - .5) * 1.25, len * (.55 + r() * .25), depth - 1, delay + .35);
+    }
+  }
+  if (hang) {
+    for (let i = 0; i < 4; i++) branch(-4 + r() * 20, -4 + r() * 30, .35 + i * .28 + r() * .2, 70 + r() * 50, 4, i * .2);
+  } else {
+    for (let i = 0; i < 6; i++) branch(8 + i * 26 + r() * 10, H + 4, -Math.PI / 2 + (r() - .5) * .55, 70 + r() * 70, 4, i * .15);
+  }
+  const stroke = "currentColor";
+  const svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="${hang ? "xMinYMin" : "xMinYMax"} meet" aria-hidden="true">
+    <g fill="none" stroke="${stroke}" stroke-linecap="round" opacity="${light ? .8 : .55}">
+      ${paths.map(p => `<path d="${p.d}" stroke-width="${p.w.toFixed(2)}" style="--len:${p.len.toFixed(0)};--dl:${(1 + p.dl).toFixed(2)}s"/>`).join("")}
+    </g>
+    <g stroke="${stroke}" stroke-width=".55" fill="${light ? "rgba(246,230,226,.55)" : "rgba(255,247,244,.75)"}" opacity="${light ? .9 : .7}">
+      ${blooms.map(b => `<circle class="bloom" cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${b.s.toFixed(2)}" style="--dl:${(1 + b.dl).toFixed(2)}s"/>`).join("")}
+    </g></svg>`;
+  box.innerHTML = svg;
+}
+$$(".botanic").forEach(plant);
+
+/* ---------- Musique ---------- */
+let audioEl = null, ctx = null, master = null, playing = false, loopTimer = null;
+function musicBox() {
+  // Petite boîte à musique générée (si aucun fichier audio n'est fourni)
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+  master.gain.linearRampToValueAtTime(.16, ctx.currentTime + 2);
+  const notes = [659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33, 659.25, 523.25, 659.25, 783.99, 659.25, 587.33, 523.25, 493.88, 523.25];
+  const bass = [130.81, 98, 110, 87.31];
+  let step = 0;
+  function bar() {
+    if (!playing) return;
+    const t0 = ctx.currentTime + .05, beat = .42;
+    for (let i = 0; i < 8; i++) tone(notes[(step * 8 + i) % notes.length], t0 + i * beat, 1.6, .5);
+    tone(bass[step % 4], t0, 3.2, .35); tone(bass[step % 4] * 1.5, t0 + beat * 4, 2.4, .2);
+    step++; loopTimer = setTimeout(bar, beat * 8 * 1000);
+  }
+  function tone(f, t, dur, vol) {
+    const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.value = f; o2.type = "triangle"; o2.frequency.value = f * 2;
+    const g2 = ctx.createGain(); g2.gain.value = .12;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0005, t + dur);
+    o.start(t); o2.start(t); o.stop(t + dur + .05); o2.stop(t + dur + .05);
+  }
+  bar();
+}
+function setMusic(on) {
+  playing = on;
+  $("#music").setAttribute("aria-pressed", on);
+  $("#music").setAttribute("aria-label", on ? "Couper la musique" : "Lancer la musique");
+  $("#waves").hidden = !on; $("#mute").hidden = on;
+  if (CONFIG.musicSrc) {
+    audioEl = audioEl || Object.assign(new Audio(CONFIG.musicSrc), { loop: true, volume: .5 });
+    on ? audioEl.play().catch(() => setMusic(false)) : audioEl.pause();
+    return;
+  }
+  try {
+    if (on) { musicBox(); }
+    else if (master) { clearTimeout(loopTimer); const m = master; m.gain.cancelScheduledValues(ctx.currentTime); m.gain.setValueAtTime(m.gain.value, ctx.currentTime); m.gain.linearRampToValueAtTime(0, ctx.currentTime + .6); setTimeout(() => m.disconnect(), 800); }
+  } catch (e) {}
+}
+$("#music").addEventListener("click", () => setMusic(!playing));
+setMusic(false);
+
+/* ---------- Ouverture de l'enveloppe ---------- */
+$("#seal").addEventListener("click", () => {
+  $("#envelope").classList.add("open");
+  setMusic(true);                       // le tap autorise le son
+  setTimeout(() => {
+    document.body.classList.remove("locked");
+    document.body.classList.add("opened");
+    $$("#accueil .rv").forEach(el => el.classList.add("in"));
+  }, 1300);
+  setTimeout(() => $("#envelope").remove(), 2300);
+});
+
+render();
+</script>

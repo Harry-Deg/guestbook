@@ -86,6 +86,11 @@ Ces points ne peuvent pas être prouvés hors de Google :
 | La CSP est en place et ne casse pas le site | 🔶 analyse statique concluante (zéro style/script en ligne, les **deux** domaines Apps Script sont dans `connect-src`) ; à confirmer en console réelle |
 | Les erreurs renvoyées ne contiennent ni trace technique ni contenu interne | ✅ vérifié de l'extérieur par `verifier-deploiement.sh` |
 
+> **Polices** : auto-hébergées dans `assets/fonts/` (D34). Les charger depuis
+> Google Fonts aurait imposé d'ouvrir `style-src` et `font-src` à un domaine tiers,
+> et donné l'adresse IP de chaque invité à Google. Vérifié en navigateur sans
+> JavaScript : aucune ressource externe n'est demandée.
+
 > **Note sur `frame-ancestors`** : la directive est présente mais **inerte**, car les
 > navigateurs l'ignorent dans une CSP posée par balise `<meta>`. Sans conséquence ici :
 > il n'y a aucun cookie, et le token vit en `sessionStorage`. On la garde pour le jour
