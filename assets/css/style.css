@@ -953,3 +953,93 @@ textarea[aria-invalid="true"] {
   }
   .js .rv { opacity: 1; transform: none; }
 }
+
+
+/* =====================================================================
+   Grand écran
+
+   Uniquement des `@media (min-width: …)` : le rendu mobile, qui reste
+   la cible principale, n'est modifié nulle part.
+
+   Le site est un formulaire avant d'être une vitrine : on élargit la
+   colonne et on agrandit la typographie, mais on ne passe pas en deux
+   colonnes. Un faire-part se lit en une colonne, et éclater le
+   formulaire ferait perdre le fil à qui répond pour quatre personnes.
+   ===================================================================== */
+
+/* Premier seuil : le pourtour cesse d'être un aplat dès que l'écran dépasse
+   nettement la colonne. La feuille flotte alors comme un carton posé sur une
+   table, au lieu de flotter dans le vide. */
+@media (min-width: 620px) {
+
+  body {
+    background:
+      radial-gradient(130% 90% at 50% 0%,
+        #f8f4ec 0%, #eee7da 55%, #e4dccb 100%) fixed;
+  }
+
+  .page {
+    box-shadow: 0 2px 6px rgba(74, 66, 56, .06),
+                0 24px 70px rgba(74, 66, 56, .16);
+  }
+}
+
+
+/* Second seuil : la colonne s'élargit et la typographie grandit d'autant. */
+@media (min-width: 768px) {
+
+  :root {
+    --col: 560px;
+    --biseau: 16px;
+  }
+
+  body { font-size: 18px; }
+
+  .section { padding-block: 72px; padding-inline: 44px; }
+  .section--serre { padding-block: 36px; }
+
+  .entete { padding: 28px 24px 22px; }
+  .entete__monogramme { font-size: 21px; }
+
+  /* ── Bandeau ── */
+
+  .bandeau__prenoms { font-size: clamp(70px, 6.5vw, 90px); }
+  .bandeau__date { font-size: 22px; }
+  .bandeau__texte { margin-top: -42px; }
+
+  /* La photo est en portrait 860×1174 : à 560 px de large elle ferait
+     765 px de haut et occuperait presque tout le premier écran. On la
+     recadre par la hauteur, en gardant le couple dans le champ. */
+  .bandeau__photo {
+    aspect-ratio: auto;
+    height: min(620px, 68vh);
+    object-fit: cover;
+    object-position: 50% 42%;
+  }
+
+  /* ── Cartes et formulaire ── */
+
+  .carte__in { padding: 40px 34px; }
+  .carte + .carte { margin-top: 32px; }
+
+  .personne__nom h3 { font-size: 30px; }
+  .programme__heure { font-size: 40px; }
+  .rebours__nombre { font-size: 42px; }
+  .rebours h2 { font-size: 46px; }
+  .bande .script { font-size: 52px; }
+
+  /* Les champs respirent un peu plus : la souris est moins précise que
+     le doigt sur une cible étroite, mais on gagne à aérer la lecture. */
+  .champ { margin-bottom: 1.7rem; }
+  .ligne-deux { grid-template-columns: 110px 1fr; gap: 1rem; }
+}
+
+@media (min-width: 1280px) {
+  :root { --col: 600px; }
+  .section { padding-block: 80px; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .choix-presence__option:hover span { border-color: var(--encre); }
+  .choix-presence input:checked + span { border-color: var(--encre); }
+}

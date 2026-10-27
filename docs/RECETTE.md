@@ -213,6 +213,20 @@ le navigateur.
 - [ ] Attendre 11 minutes puis valider le code → « Ce code a expiré ».
 - [ ] Mode avion, puis envoyer → « Petit souci technique », bouton réactivé.
 
+### Sur ordinateur
+
+Le site est pensé pour le téléphone, mais une partie des invités l'ouvrira sur un
+ordinateur — souvent les grands-parents, justement.
+
+- [ ] Vers **1440 px** : la feuille est centrée et posée sur un fond dégradé, avec
+      son ombre. Elle ne doit pas flotter dans un aplat vide.
+- [ ] **Réduire progressivement la fenêtre** de 1920 à 320 px : aucun saut brutal,
+      aucune barre de défilement horizontale, rien qui se chevauche.
+- [ ] Autour de **620 px**, l'enveloppe de l'invitation passe du plein écran au
+      format paysage posé à plat. Le passage doit rester net.
+- [ ] Au survol à la souris : les boutons se remplissent, les options de présence
+      marquent leur bordure.
+
 ### Puis sur téléphone
 
 Depuis le même réseau Wi-Fi, l'adresse est `http://<IP-de-votre-Mac>:8000`

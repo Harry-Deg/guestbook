@@ -382,3 +382,30 @@ ouvre Google Maps — qui gère mieux le passage à l'application native du tél
 l'invitation, et demande une clé d'API à gérer. OpenStreetMap n'exige ni l'un ni
 l'autre. Le lien d'itinéraire est un choix délibéré de l'invité, pas un chargement
 subi : Google y est acceptable, et plus utile.
+
+## 2026-10-27 — D38 · Grand écran : deux seuils, et pas de passage en deux colonnes
+**Décision** : les deux pages s'adaptent à l'ordinateur par **deux seuils distincts**,
+et uniquement par ajout de règles `@media` — aucune règle du rendu mobile n'est modifiée.
+
+| Seuil | Ce qui change |
+|---|---|
+| **620 px** | Le pourtour passe d'un aplat à un dégradé très doux et la feuille reçoit une ombre portée : elle flotte comme un carton posé sur une table. L'**enveloppe devient un vrai pli au format paysage**, centré, avec son ombre. |
+| **768 px** | La colonne passe de 480 à 560 px, le corps de texte de 17 à 18 px, et les titres grandissent d'autant. |
+| **1280 px** | La colonne passe à 600 px. |
+
+**Pourquoi deux seuils et non un** : le défaut « ruban perdu dans le vide » et
+l'enveloppe plein écran qui ne ressemble plus à une enveloppe apparaissent **dès
+600 px environ**, bien avant qu'élargir la colonne ait du sens. Les traiter au même
+seuil laissait une zone de 150 px franchement laide sur tablette en portrait.
+
+**Pourquoi pas deux colonnes sur grand écran** : un faire-part se lit en une colonne,
+et c'est aussi la forme du papier dont il s'inspire. Côté RSVP, éclater le formulaire
+ferait perdre le fil à qui répond pour quatre personnes. On élargit et on agrandit,
+on ne réorganise pas.
+
+**Comment le rendu mobile est garanti intact** : les deux feuilles ne comptent que des
+lignes **ajoutées**, zéro ligne retirée ou modifiée, et toutes à l'intérieur de blocs
+`@media (min-width: …)`. Vérifié par `git diff`.
+
+**Vérifié** : aucun débordement horizontal de 320 à 1920 px, sur les deux pages,
+enveloppe ouverte comme fermée.

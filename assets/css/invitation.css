@@ -724,3 +724,130 @@ svg [hidden] { display: none; }
   .js .botanique path { stroke-dashoffset: 0; }
   .js .botanique .fleur { opacity: .75; transform: none; }
 }
+
+
+/* =====================================================================
+   Grand écran
+
+   Tout ce qui suit est dans des `@media (min-width: …)` : le rendu
+   mobile, qui est la cible principale, n'est touché nulle part.
+
+   Trois corrections, par ordre d'importance :
+
+   1. L'enveloppe. En plein écran, le rabat devenait un bandeau vertical
+      de 480 px flottant dans du beige : cela ne ressemblait plus à une
+      enveloppe. Sur grand écran elle devient un vrai pli au format
+      paysage, posé sur une surface, avec son ombre portée.
+   2. La colonne s'élargit et la typographie grandit d'autant. Sans cela
+      on ne fait qu'étirer le vide autour d'un ruban trop étroit.
+   3. Le pourtour cesse d'être un aplat : un dégradé très doux fait
+      flotter la feuille comme un carton posé sur une table.
+   ===================================================================== */
+
+/* Premier seuil : dès que l'écran dépasse nettement la colonne, le fond plat
+   fait « ruban perdu dans le vide » et l'enveloppe plein écran n'a plus l'air
+   d'une enveloppe. Ces deux corrections arrivent donc avant l'élargissement de
+   la colonne, qui lui n'a de sens qu'à partir de 768 px. */
+@media (min-width: 620px) {
+
+  body {
+    background:
+      radial-gradient(130% 90% at 50% 0%,
+        #f8f4ec 0%, #eee7da 55%, #e4dccb 100%) fixed;
+  }
+
+  .feuille {
+    box-shadow: 0 2px 6px rgba(74, 66, 56, .06),
+                0 24px 70px rgba(74, 66, 56, .16);
+  }
+
+  /* ── L'enveloppe devient un vrai pli posé à plat ── */
+
+  .enveloppe { align-items: center; }
+
+  .enveloppe__corps {
+    width: min(660px, 76vw);
+    height: min(452px, 64vh);
+    max-width: none;
+    border-radius: 5px;
+    background: linear-gradient(170deg, #f1eade 0%, #e7dcc5 100%);
+    box-shadow: 0 2px 4px rgba(120, 104, 74, .18),
+                0 34px 70px rgba(120, 104, 74, .3);
+  }
+
+  /* Le rabat suit la nouvelle boîte : `preserveAspectRatio="none"` étire
+     sa courbe, qui s'aplatit — c'est bien ce que fait une enveloppe
+     posée au format paysage. */
+  .rabat { border-radius: 5px 5px 0 0; overflow: hidden; }
+
+  .sceau { width: 86px; height: 86px; }
+  .sceau span { font-size: 21px; }
+
+  /* L'appel passe SOUS l'enveloppe, au lieu d'être collé au bas de
+     l'écran, à des centaines de pixels du sceau. */
+  .enveloppe__appel { bottom: -54px; }
+}
+
+
+/* Second seuil : la colonne s'élargit et la typographie grandit d'autant.
+   Sans le second, on ne ferait qu'étirer le vide autour du texte. */
+@media (min-width: 768px) {
+
+  :root {
+    --col: 560px;
+    --biseau: 16px;
+  }
+
+  body { font-size: 18px; }
+
+  .section { padding-block: 84px; padding-inline: 44px; }
+
+  /* ── Accueil ── */
+
+  .accueil { padding-block: 128px 112px; }
+  .prenoms { font-size: clamp(76px, 7vw, 96px); }
+  .accueil__date { font-size: 23px; }
+
+  /* Les branchages se resserrent : à 560 px ils mangeaient le texte. */
+  .b-hg, .b-hd { width: 38%; height: 32%; }
+  .b-bg, .b-bd { width: 44%; height: 38%; }
+
+  /* ── Reste de la page ── */
+
+  .rebours h2 { font-size: 48px; }
+  .rebours__nombre { font-size: 44px; }
+
+  .lieu__nom { font-size: 46px; }
+  .carte-plan iframe { height: 280px; }
+
+  .bande { padding-block: 96px 142px; }
+  .bande .script { font-size: 60px; }
+
+  .programme-section { margin-top: -104px; }
+  .programme-section .cadre__in { padding: 52px 34px 48px; }
+  .etape__heure { font-size: 42px; }
+  .etape__texte { font-size: 16.5px; }
+
+  .rsvp__phrase { font-size: 28px; }
+  .cadre__in { padding: 42px 32px; }
+}
+
+@media (min-width: 1280px) {
+  :root { --col: 600px; }
+  .section { padding-block: 92px; }
+}
+
+/* Écran large mais peu haut (portable 1280×720, vidéoprojecteur) :
+   l'enveloppe doit rester entièrement visible, appel compris. */
+@media (min-width: 620px) and (max-height: 620px) {
+  .enveloppe__corps { height: min(360px, 74vh); }
+  .sceau { width: 70px; height: 70px; }
+  .enveloppe__appel { bottom: -44px; }
+}
+
+/* Appareil à pointeur fin : on peut se permettre des survols nets. */
+@media (hover: hover) and (pointer: fine) {
+  .liens a:hover .label,
+  .liens button:hover .label { color: var(--encre); text-decoration: underline; text-underline-offset: 5px; }
+  .flottant:hover { background: rgba(247, 243, 234, .96); }
+}
